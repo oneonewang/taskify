@@ -49,15 +49,15 @@
 
 ### 实现任务
 
-- [ ] T001 创建后端项目结构 `backend/cmd/server/`, `backend/internal/{models,handlers,services,repository,middleware}`, `backend/pkg/response`, `backend/config/`
-- [ ] T002 [P] 初始化 Go 模块：backend/go.mod (module github.com/taskify/backend, go 1.21+)
-- [ ] T003 [P] 创建 backend/go.mod 并添加依赖：gin, gorm, gorm.io/driver/sqlite, gorm.io/driver/postgres
-- [ ] T004 创建前端项目结构 `frontend/src/{api,components,stores,views,router}`，使用 Vite + Vue 3 + TypeScript
-- [ ] T005 [P] 创建 frontend/package.json 并安装依赖：vue, vue-router, pinia, element-plus, vue-draggable-plus, axios
-- [ ] T006 创建 backend/config/config.go 实现环境变量配置管理 (GIN_MODE, DATABASE_URL, PORT)
-- [ ] T007 创建 backend/pkg/response/response.go 实现统一响应格式 {success, data, message/error}
-- [ ] T008 创建 backend/internal/models/user.go, project.go, task.go, comment.go (参考 data-model.md)
-- [ ] T009 验证项目运行：后端启动 + 前端 dev server
+- [x] T001 创建后端项目结构 `backend/cmd/server/`, `backend/internal/{models,handlers,services,repository,middleware}`, `backend/pkg/response`, `backend/config/`
+- [x] T002 [P] 初始化 Go 模块：backend/go.mod (module github.com/taskify/backend, go 1.21+)
+- [x] T003 [P] 创建 backend/go.mod 并添加依赖：gin, gorm, gorm.io/driver/sqlite, gorm.io/driver/postgres
+- [x] T004 创建前端项目结构 `frontend/src/{api,components,stores,views,router}`，使用 Vite + Vue 3 + TypeScript
+- [x] T005 [P] 创建 frontend/package.json 并安装依赖：vue, vue-router, pinia, element-plus, vue-draggable-plus, axios
+- [x] T006 创建 backend/config/config.go 实现环境变量配置管理 (GIN_MODE, DATABASE_URL, PORT)
+- [x] T007 创建 backend/pkg/response/response.go 实现统一响应格式 {success, data, message/error}
+- [x] T008 创建 backend/internal/models/user.go, project.go, task.go, comment.go (参考 data-model.md)
+- [x] T009 验证项目运行：后端启动 + 前端 dev server
 
 ---
 
@@ -72,14 +72,14 @@
 
 ### 实现任务
 
-- [ ] T010 创建 backend/internal/repository/sqlite.go 实现 Gorm SQLite 连接和 AutoMigrate
-- [ ] T011 [P] 创建 backend/internal/models/user.go 实现 User 模型和预定义用户数据 (5个用户 Seed Data)
-- [ ] T012 [P] 创建 backend/internal/models/project.go 实现 Project 模型和预定义项目数据 (3个项目 Seed Data)
-- [ ] T013 [P] 创建 backend/internal/models/task.go 实现 Task 模型 (关联 User, Project，状态枚举: todo/in_progress/review/done)
-- [ ] T014 [P] 创建 backend/internal/models/comment.go 实现 Comment 模型 (关联 User, Task)
-- [ ] T015 创建 backend/internal/middleware/cors.go 实现 CORS 中间件
-- [ ] T016 创建 backend/cmd/server/main.go 实现服务器入口、路由注册、数据库初始化
-- [ ] T017 运行数据库迁移验证：`go run cmd/server/main.go` 无错误启动
+- [x] T010 创建 backend/internal/repository/sqlite.go 实现 Gorm SQLite 连接和 AutoMigrate
+- [x] T011 [P] 创建 backend/internal/models/user.go 实现 User 模型和预定义用户数据 (5个用户 Seed Data)
+- [x] T012 [P] 创建 backend/internal/models/project.go 实现 Project 模型和预定义项目数据 (3个项目 Seed Data)
+- [x] T013 [P] 创建 backend/internal/models/task.go 实现 Task 模型 (关联 User, Project，状态枚举: todo/in_progress/review/done)
+- [x] T014 [P] 创建 backend/internal/models/comment.go 实现 Comment 模型 (关联 User, Task)
+- [x] T015 创建 backend/internal/middleware/cors.go 实现 CORS 中间件
+- [x] T016 创建 backend/cmd/server/main.go 实现服务器入口、路由注册、数据库初始化
+- [x] T017 运行数据库迁移验证：`go run cmd/server/main.go` 无错误启动
 
 ---
 
