@@ -1,50 +1,124 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+# Taskify 章程
+<!-- 项目：Taskify - 安全优先的任务管理微服务应用 -->
 
-## Core Principles
+## 核心原则
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. 安全优先 (Security First)
+所有功能必须以安全为核心考量。安全不是事后考虑，而是设计阶段的基本要求。
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+**规则**：
+- 所有用户输入必须经过严格验证
+- 禁止将用户输入直接拼接到查询或命令中
+- 所有敏感操作必须记录审计日志
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+**理由**：安全漏洞可能导致数据泄露和系统瘫痪，预防成本远低于修复成本。
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### II. 输入验证 (Input Validation)
+所有用户输入必须在使用前进行验证和清理，防止注入攻击和无效数据。
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+**规则**：
+- 类型检查：验证输入数据类型是否符合预期
+- 范围检查：验证数值输入是否在允许范围内
+- 格式验证：使用白名单验证邮箱、URL等格式
+- 长度限制：防止缓冲区溢出和资源耗尽
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+**理由**：用户输入是系统被攻击的主要向量，严格验证是防御的第一道防线。
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+### III. 微服务架构 (Micervices Architecture)
+系统采用微服务架构，各服务独立部署和扩展，通过明确定义的接口通信。
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+**规则**：
+- 服务间通信使用RESTful API或消息队列
+- 每个服务拥有独立的数据库（禁止跨服务直接访问数据库）
+- 服务接口必须版本化
+- 服务发现和负载均衡由基础设施层处理
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+**理由**：微服务架构支持独立部署、扩展和技术栈灵活性，是现代云原生应用的基础。
 
-## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
+### IV. 完全文档化 (Code Documentation)
+所有代码必须包含完整的中文文档，包括函数、类、模块的用途、参数说明和返回值。
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+**规则**：
+- 公共API必须包含JSDoc/DocString风格的文档注释
+- 复杂业务逻辑必须包含行内注释说明
+- 数据库Schema必须包含字段说明
+- 所有配置项必须文档化
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**理由**：完整文档降低维护成本，促进团队协作，确保知识传承。
+
+### V. 中文内容 (Chinese Content)
+所有文档、注释和自动生成内容必须使用简体中文。
+
+**规则**：
+- 代码注释使用简体中文
+- README和文档使用简体中文
+- 日志消息使用简体中文
+- 自动生成的内容使用简体中文
+
+**理由**：确保团队所有成员（无论母语背景）都能理解和维护代码。
+
+## 微服务约束 (Micervices Constraints)
+
+### 服务隔离原则
+每个微服务必须作为独立的部署单元，具有以下特性：
+- 独立的代码仓库或清晰模块边界
+- 独立的配置管理
+- 独立的日志和监控端点
+- 独立的数据库或Schema
+
+### 服务间通信
+- 使用JSON over HTTPS进行同步通信
+- 使用消息队列进行异步通信
+- 所有跨服务调用必须包含超时和重试机制
+- 服务间不得共享数据库连接
+
+### 安全通信
+- 服务间通信必须使用TLS加密
+- 使用API密钥或JWT进行服务间认证
+- 敏感配置通过环境变量或密钥管理服务传递
+
+## 开发工作流 (Development Workflow)
+
+### 代码审查
+- 所有代码变更必须通过Pull Request
+- PR必须包含变更说明和测试结果
+- 至少需要一名团队成员审查通过
+- 自动化测试必须全部通过
+
+### 测试要求
+- 单元测试覆盖率不低于80%
+- 新功能必须包含集成测试
+- 修复的Bug必须包含回归测试
+- 性能基准测试用于关键路径
+
+### 部署流程
+- 使用CI/CD自动化构建和部署
+- 生产环境部署需要审批
+- 保留部署历史和回滚能力
+- 蓝绿部署或金丝雀发布用于重大变更
+
+## 治理 (Governance)
+
+### 章程优先级
+本章程优先于其他开发实践和文档。若章程与具体实现冲突，以章程为准。
+
+### 章程修订
+章程修订必须满足以下条件：
+- 修订内容必须完整文档化
+- 必须有明确的变更理由
+- 必须经过团队讨论和批准
+- 必须包含迁移计划（如涉及）
+
+### 版本管理
+- 版本格式：主版本.次版本.修订版本 (MAJOR.MINOR.PATCH)
+- 主版本：破坏性变更或原则性修改
+- 次版本：新增原则或重大扩展
+- 修订版本：澄清、措辞修正、非语义性完善
+- 每次修订必须更新版本号和日期
+
+### 合规检查
+- 所有Pull Request必须验证对章程的遵守情况
+- 架构决策必须记录并说明与章程的一致性
+- 违反章程的决策必须明确记录原因
+
+**版本**: 1.1.0 | **批准日期**: 2026-04-08 | **最后修订**: 2026-04-08
