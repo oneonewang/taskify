@@ -12,7 +12,7 @@
 **Primary Dependencies**:
 - Backend: Gin (web framework), Gorm (ORM), go-playwright (E2E testing), SSE
 - Frontend: Vue.js 3, Element Plus, vue-draggable-plus (drag-and-drop), Pinia
-**Storage**: SQLite (开发环境), PostgreSQL (生产环境)
+**Storage**: 用户会话 - 浏览器 localStorage (刷新保持/关闭重置); 业务数据 - SQLite (开发环境) / PostgreSQL (生产环境)
 **Testing**: go test + httptest (后端), Vitest + Playwright (前端)
 **Target Platform**: Linux服务器 (后端), 桌面浏览器 (前端)
 **Project Type**: Web应用 (REST API后端 + 单页应用前端)

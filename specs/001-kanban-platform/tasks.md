@@ -183,6 +183,7 @@
 - [ ] T046 集成 vue-draggable-plus：在 KanbanColumn.vue 中使用 VueDraggable 组件
 - [ ] T047 实现乐观更新：拖拽时立即更新 UI，API 失败时回滚
 - [ ] T048 集成测试：拖拽任务 → 跨列移动 → 验证状态持久化
+- [ ] T048.1 [P] 实现任务移动的竞态处理：last-write-wins 策略，API返回最新状态时前端重置UI
 
 ---
 
