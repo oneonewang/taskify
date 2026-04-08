@@ -24,7 +24,10 @@
             :columns="projectStore.columns"
             :tasks="projectStore.tasks"
             :current-user-id="currentUserId"
+            :project-id="selectedProjectId"
             @task-click="onTaskClick"
+            @task-moved="onTaskMoved"
+            @tasks-updated="onTasksUpdated"
           />
         </template>
       </div>
@@ -38,9 +41,11 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
 import { useUserStore } from '../stores/user'
 import { useProjectStore } from '../stores/project'
 import { getProjects } from '../api/project'
+import { updateTaskStatus, type UpdateTaskStatusRequest } from '../api/task'
 import type { Project, Task } from '../api/project'
 import KanbanBoard from '../components/kanban/KanbanBoard.vue'
 import TeamMembers from '../components/TeamMembers.vue'
@@ -55,7 +60,6 @@ const selectedProjectId = ref<number>(1)
 const currentUserId = computed(() => userStore.currentUserId)
 
 onMounted(async () => {
-  // 加载项目列表
   try {
     const res = await getProjects()
     if (res.success) {
@@ -72,6 +76,42 @@ onMounted(async () => {
 
 async function onProjectChange(projectId: number) {
   await projectStore.loadProject(projectId)
+}
+
+// 任务移动处理
+async function onTaskMoved(taskId: number, newStatus: string, newPosition: number) {
+  // 乐观更新：立即更新本地状态
+  const task = projectStore.tasks.find(t => t.id === taskId)
+  if (!task) return
+
+  const oldStatus = task.status
+  const oldPosition = task.position
+
+  // 立即更新 UI
+  projectStore.updateTask(taskId, { status: newStatus, position: newPosition })
+
+  // 调用 API
+  try {
+    const data: UpdateTaskStatusRequest = {
+      status: newStatus,
+      position: newPosition
+    }
+    const res = await updateTaskStatus(taskId, data)
+    if (!res.success) {
+      // API 失败，回滚
+      projectStore.updateTask(taskId, { status: oldStatus, position: oldPosition })
+      ElMessage.error(res.error?.message || '移动任务失败')
+    }
+  } catch (e: any) {
+    // 网络错误，回滚
+    projectStore.updateTask(taskId, { status: oldStatus, position: oldPosition })
+    ElMessage.error(e.message || '移动任务失败')
+  }
+}
+
+// 任务列表更新（拖拽后重新排序）
+function onTasksUpdated(updatedTasks: Task[]) {
+  projectStore.setTasks(updatedTasks)
 }
 
 function onTaskClick(task: Task) {

@@ -4,35 +4,116 @@
       <span class="column-title">{{ name }}</span>
       <span class="column-count">{{ tasks.length }}</span>
     </div>
+
     <div class="column-content">
-      <KanbanCard
-        v-for="task in tasks"
-        :key="task.id"
-        :task="task"
-        :current-user-id="currentUserId"
-        @click="$emit('taskClick', task)"
-      />
-      <div v-if="tasks.length === 0" class="empty-column">
+      <VueDraggable
+        v-model="localTasks"
+        class="drag-area"
+        group="kanban"
+        :animation="200"
+        ghost-class="ghost-card"
+        drag-class="dragging-card"
+        @end="onDragEnd"
+      >
+        <KanbanCard
+          v-for="task in localTasks"
+          :key="task.id"
+          :task="task"
+          :current-user-id="currentUserId"
+          @click="$emit('taskClick', task)"
+        />
+      </VueDraggable>
+
+      <div v-if="localTasks.length === 0" class="empty-column">
         暂无任务
       </div>
     </div>
+
+    <!-- 创建任务按钮 -->
+    <div class="column-footer">
+      <el-button
+        v-if="status === 'todo'"
+        type="primary"
+        text
+        class="add-task-btn"
+        @click="showTaskForm = true"
+      >
+        <el-icon><Plus /></el-icon>
+        添加任务
+      </el-button>
+    </div>
+
+    <!-- 任务创建表单 -->
+    <TaskForm
+      v-model:visible="showTaskForm"
+      :project-id="projectId"
+      @success="onTaskCreated"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref, watch } from 'vue'
+import { VueDraggable } from 'vue-draggable-plus'
+import { Plus } from '@element-plus/icons-vue'
 import type { Task } from '../../api/project'
 import KanbanCard from './KanbanCard.vue'
+import TaskForm from '../task/TaskForm.vue'
 
-defineProps<{
+const props = defineProps<{
   name: string
   status: string
   tasks: Task[]
   currentUserId: number | null
+  projectId: number
 }>()
 
-defineEmits<{
+const emit = defineEmits<{
   taskClick: [task: Task]
+  taskMoved: [taskId: number, newStatus: string, newPosition: number]
+  tasksUpdated: [tasks: Task[]]
 }>()
+
+// 本地任务列表（用于拖拽）
+const localTasks = ref<Task[]>([...props.tasks])
+const showTaskForm = ref(false)
+
+// 监听 tasks 变化
+watch(() => props.tasks, (newTasks) => {
+  // 保留拖拽过程中的位置信息
+  localTasks.value = newTasks.map(task => {
+    const existing = localTasks.value.find(t => t.id === task.id)
+    if (existing) {
+      return { ...task }
+    }
+    return task
+  })
+}, { deep: true })
+
+// 拖拽结束事件
+function onDragEnd() {
+  // 更新父组件的任务列表
+  emit('tasksUpdated', localTasks.value)
+
+  // 通知任务移动
+  localTasks.value.forEach((task, index) => {
+    if (task.status !== props.status) {
+      // 任务移动到了新列
+      emit('taskMoved', task.id, props.status, index)
+    } else {
+      // 任务在同一列内移动
+      const originalTask = props.tasks.find(t => t.id === task.id)
+      if (originalTask && originalTask.position !== index) {
+        emit('taskMoved', task.id, props.status, index)
+      }
+    }
+  })
+}
+
+// 任务创建成功
+function onTaskCreated(task: Task) {
+  emit('tasksUpdated', [...localTasks.value, task])
+}
 </script>
 
 <style scoped>
@@ -71,10 +152,14 @@ defineEmits<{
 .column-content {
   flex: 1;
   overflow-y: auto;
+  min-height: 100px;
+}
+
+.drag-area {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  min-height: 100px;
+  min-height: 60px;
 }
 
 .empty-column {
@@ -82,5 +167,31 @@ defineEmits<{
   color: #999;
   font-size: 13px;
   padding: 20px 0;
+}
+
+.column-footer {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #dfe4ea;
+}
+
+.add-task-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+/* 拖拽样式 */
+.ghost-card {
+  opacity: 0.5;
+  background: #c8e6ff;
+  border: 2px dashed #667eea;
+}
+
+.dragging-card {
+  transform: rotate(3deg);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
 }
 </style>

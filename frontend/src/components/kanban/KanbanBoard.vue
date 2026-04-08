@@ -7,7 +7,10 @@
       :status="column.status"
       :tasks="getTasksByStatus(column.status)"
       :current-user-id="currentUserId"
-      @task-click="$emit('taskClick', $event)"
+      :project-id="projectId"
+      @task-click="(task) => emit('taskClick', task)"
+      @task-moved="(taskId, newStatus, newPosition) => emit('taskMoved', taskId, newStatus, newPosition)"
+      @tasks-updated="(tasks) => onTasksUpdated(column.status, tasks)"
     />
   </div>
 </template>
@@ -20,14 +23,24 @@ const props = defineProps<{
   columns: Array<{ status: string; name: string }>
   tasks: Task[]
   currentUserId: number | null
+  projectId: number
 }>()
 
-defineEmits<{
-  taskClick: [task: Task]
+const emit = defineEmits<{
+  (e: 'taskClick', task: Task): void
+  (e: 'taskMoved', taskId: number, newStatus: string, newPosition: number): void
+  (e: 'tasksUpdated', tasks: Task[]): void
 }>()
 
 function getTasksByStatus(status: string): Task[] {
   return props.tasks.filter(t => t.status === status)
+}
+
+// 当某一列的任务列表更新时
+function onTasksUpdated(status: string, updatedTasks: Task[]) {
+  // 合并更新后的任务到总任务列表
+  const otherTasks = props.tasks.filter(t => t.status !== status)
+  emit('tasksUpdated', [...otherTasks, ...updatedTasks])
 }
 </script>
 

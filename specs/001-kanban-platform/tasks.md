@@ -158,11 +158,11 @@
 
 ### 实现任务
 
-- [ ] T038 [P] 创建 backend/internal/handlers/task.go 实现 POST /api/projects/:id/tasks (创建任务), PUT /api/tasks/:id (更新任务)
-- [ ] T039 创建 frontend/src/api/task.ts 实现 API 客户端
-- [ ] T040 创建 frontend/src/components/task/TaskForm.vue 任务创建/编辑表单
-- [ ] T041 在 KanbanColumn.vue 中集成"创建任务"按钮和 TaskForm
-- [ ] T042 创建 frontend/src/stores/kanban.ts 实现看板状态管理 (添加任务、更新任务)
+- [x] T038 [P] 创建 backend/internal/handlers/task.go 实现 POST /api/projects/:id/tasks (创建任务), PUT /api/tasks/:id (更新任务)
+- [x] T039 创建 frontend/src/api/task.ts 实现 API 客户端
+- [x] T040 创建 frontend/src/components/task/TaskForm.vue 任务创建/编辑表单
+- [x] T041 在 KanbanColumn.vue 中集成"创建任务"按钮和 TaskForm
+- [x] T042 创建 frontend/src/stores/kanban.ts 实现看板状态管理 (添加任务、更新任务)
 - [ ] T043 集成测试：创建任务 → 填写标题和负责人 → 提交 → 验证任务显示在待办列
 
 ---
@@ -178,10 +178,10 @@
 
 ### 实现任务
 
-- [ ] T044 [P] 创建 backend/internal/handlers/task.go 实现 PUT /api/tasks/:id/status (状态更新 + position)
-- [ ] T045 在 frontend/src/stores/kanban.ts 添加任务移动状态更新逻辑
-- [ ] T046 集成 vue-draggable-plus：在 KanbanColumn.vue 中使用 VueDraggable 组件
-- [ ] T047 实现乐观更新：拖拽时立即更新 UI，API 失败时回滚
+- [x] T044 [P] 创建 backend/internal/handlers/task.go 实现 PUT /api/tasks/:id/status (状态更新 + position)
+- [x] T045 在 frontend/src/stores/kanban.ts 添加任务移动状态更新逻辑
+- [x] T046 集成 vue-draggable-plus：在 KanbanColumn.vue 中使用 VueDraggable 组件
+- [x] T047 实现乐观更新：拖拽时立即更新 UI，API 失败时回滚
 - [ ] T048 集成测试：拖拽任务 → 跨列移动 → 验证状态持久化
 - [ ] T048.1 [P] 实现任务移动的竞态处理：last-write-wins 策略，API返回最新状态时前端重置UI
 
@@ -197,8 +197,8 @@
 
 ### 实现任务
 
-- [ ] T049 在 KanbanCard.vue 中实现任务卡片高亮逻辑 (根据当前用户 ID vs assignee_id)
-- [ ] T050 添加高亮样式：特殊背景色/边框，区别于普通任务卡片
+- [x] T049 在 KanbanCard.vue 中实现任务卡片高亮逻辑 (根据当前用户 ID vs assignee_id)
+- [x] T050 添加高亮样式：特殊背景色/边框，区别于普通任务卡片
 - [ ] T051 集成测试：选择用户A → 验证A的任务高亮 → 切换用户B → 验证B的任务高亮
 
 ---
