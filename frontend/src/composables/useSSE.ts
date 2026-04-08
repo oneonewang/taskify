@@ -15,9 +15,15 @@ export interface SSETaskDeletedEvent {
 }
 export interface SSECommentAddedEvent {
   id: number
-  task_id: number
   content: string
-  user_id: number
+  user: {
+    id: number
+    name: string
+    avatar: string
+  }
+  task_id: number
+  created_at: string
+  updated_at: string
 }
 
 export type SSEEventHandler = {

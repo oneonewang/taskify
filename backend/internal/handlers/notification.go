@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"time"
@@ -18,7 +19,11 @@ var clients = make(map[*SSEClient]bool)
 
 // Broadcast 向所有客户端广播消息
 func Broadcast(event string, data interface{}) {
-	message := fmt.Sprintf("event: %s\ndata: %s\n\n", event, data)
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		return
+	}
+	message := fmt.Sprintf("event: %s\ndata: %s\n\n", event, jsonData)
 	for client := range clients {
 		select {
 		case client.Channel <- message:

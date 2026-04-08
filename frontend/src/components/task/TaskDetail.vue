@@ -151,6 +151,7 @@ import { ElMessage } from 'element-plus'
 import type { Task } from '../../api/project'
 import { getComments, createComment, updateComment, deleteComment, type Comment } from '../../api/comment'
 import { useUserStore } from '../../stores/user'
+import { useSSE } from '../../composables/useSSE'
 
 const props = defineProps<{
   visible: boolean
@@ -162,6 +163,21 @@ const emit = defineEmits<{
 }>()
 
 const userStore = useUserStore()
+
+// SSE 监听评论添加事件
+useSSE({
+  onCommentAdded: (data) => {
+    // 仅当弹窗打开且评论属于当前任务时更新
+    if (props.visible && props.task && data.task_id === props.task.id) {
+      // 检查是否已存在（防止重复）
+      const exists = comments.value.some(c => c.id === data.id)
+      if (!exists) {
+        comments.value.push(data)
+        ElMessage.info('收到新评论')
+      }
+    }
+  }
+})
 
 const dialogVisible = computed({
   get: () => props.visible,
