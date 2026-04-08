@@ -284,10 +284,10 @@
 
 ### 实现任务
 
-- [ ] T068 [P] 创建 backend/internal/handlers/notification.go 实现 GET /api/events (SSE)
-- [ ] T069 [P] 创建 backend/internal/services/kanban.go 中实现 SSE 事件广播 (task_created, task_updated, task_deleted, task_moved, comment_added)
-- [ ] T070 创建 frontend/src/composables/useSSE.ts 实现前端 SSE 客户端
-- [ ] T071 在 frontend/src/stores/kanban.ts 中集成 SSE 事件监听，自动更新状态
+- [x] T068 [P] 创建 backend/internal/handlers/notification.go 实现 GET /api/events (SSE)
+- [x] T069 [P] 创建 backend/internal/services/kanban.go 中实现 SSE 事件广播 (task_created, task_updated, task_deleted, task_moved, comment_added)
+- [x] T070 创建 frontend/src/composables/useSSE.ts 实现前端 SSE 客户端
+- [x] T071 在 frontend/src/stores/kanban.ts 中集成 SSE 事件监听，自动更新状态
 
 ---
 
@@ -297,12 +297,12 @@
 
 ### 实现任务
 
-- [ ] T072 创建 backend/.env 示例配置文件
-- [ ] T073 创建 frontend/.env 示例配置文件
-- [ ] T074 添加前端 vite.config.ts 代理配置 (开发环境 API 代理到 localhost:8080)
-- [ ] T075 添加 README.md (项目说明、启动命令)
-- [ ] T076 清理临时代码和调试输出
-- [ ] T077 最终集成测试：完整用户流程 (选择用户 → 创建任务 → 拖拽 → 评论)
+- [x] T072 创建 backend/.env 示例配置文件
+- [x] T073 创建 frontend/.env 示例配置文件
+- [x] T074 添加前端 vite.config.ts 代理配置 (开发环境 API 代理到 localhost:8080)
+- [x] T075 添加 README.md (项目说明、启动命令)
+- [x] T076 清理临时代码和调试输出
+- [x] T077 最终集成测试：完整用户流程 (选择用户 → 创建任务 → 拖拽 → 评论)
 
 ---
 

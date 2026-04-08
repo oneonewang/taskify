@@ -79,12 +79,16 @@ export const useProjectStore = defineStore('project', () => {
   }
 
   function addTask(task: Task) {
-    tasks.value.push(task)
-    // 更新计数
-    if (task.status === 'todo') taskCounts.value.todo++
-    else if (task.status === 'in_progress') taskCounts.value.in_progress++
-    else if (task.status === 'review') taskCounts.value.review++
-    else if (task.status === 'done') taskCounts.value.done++
+    // 检查任务是否已存在（防止重复添加）
+    const exists = tasks.value.some(t => t.id === task.id)
+    if (!exists) {
+      tasks.value.push(task)
+      // 更新计数
+      if (task.status === 'todo') taskCounts.value.todo++
+      else if (task.status === 'in_progress') taskCounts.value.in_progress++
+      else if (task.status === 'review') taskCounts.value.review++
+      else if (task.status === 'done') taskCounts.value.done++
+    }
   }
 
   function updateTask(taskId: number, updates: Partial<Task>) {
@@ -92,6 +96,13 @@ export const useProjectStore = defineStore('project', () => {
     if (index !== -1) {
       const oldTask = tasks.value[index]
       tasks.value[index] = { ...oldTask, ...updates }
+    }
+  }
+
+  function updateTaskBySSE(task: Task) {
+    const index = tasks.value.findIndex(t => t.id === task.id)
+    if (index !== -1) {
+      tasks.value[index] = task
     }
   }
 
@@ -119,6 +130,7 @@ export const useProjectStore = defineStore('project', () => {
     setTasks,
     addTask,
     updateTask,
+    updateTaskBySSE,
     removeTask
   }
 })

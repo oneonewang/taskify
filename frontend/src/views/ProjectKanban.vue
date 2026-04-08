@@ -50,6 +50,7 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '../stores/user'
 import { useProjectStore } from '../stores/project'
+import { useSSEStoreUpdater } from '../composables/useSSEStoreUpdater'
 import { getProjects } from '../api/project'
 import { updateTaskStatus, type UpdateTaskStatusRequest } from '../api/task'
 import type { Project, Task } from '../api/project'
@@ -60,6 +61,9 @@ import TaskDetail from '../components/task/TaskDetail.vue'
 const router = useRouter()
 const userStore = useUserStore()
 const projectStore = useProjectStore()
+
+// 初始化 SSE 连接
+useSSEStoreUpdater()
 
 const projects = ref<Project[]>([])
 const selectedProjectId = ref<number>(1)

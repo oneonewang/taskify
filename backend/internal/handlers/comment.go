@@ -81,6 +81,9 @@ func CreateComment(c *gin.Context) {
 	// 重新加载关联数据
 	repository.GetDB().Preload("User").First(&comment, comment.ID)
 
+	// 广播评论添加事件
+	Broadcast("comment_added", comment.ToResponse())
+
 	response.Success(c, comment.ToResponse())
 }
 
