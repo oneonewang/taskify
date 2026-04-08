@@ -35,6 +35,12 @@
         <TeamMembers :current-user-id="currentUserId" />
       </aside>
     </div>
+
+    <!-- 任务详情对话框 -->
+    <TaskDetail
+      v-model:visible="taskDetailVisible"
+      :task="selectedTask"
+    />
   </div>
 </template>
 
@@ -49,6 +55,7 @@ import { updateTaskStatus, type UpdateTaskStatusRequest } from '../api/task'
 import type { Project, Task } from '../api/project'
 import KanbanBoard from '../components/kanban/KanbanBoard.vue'
 import TeamMembers from '../components/TeamMembers.vue'
+import TaskDetail from '../components/task/TaskDetail.vue'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -56,6 +63,8 @@ const projectStore = useProjectStore()
 
 const projects = ref<Project[]>([])
 const selectedProjectId = ref<number>(1)
+const taskDetailVisible = ref(false)
+const selectedTask = ref<Task | null>(null)
 
 const currentUserId = computed(() => userStore.currentUserId)
 
@@ -115,7 +124,8 @@ function onTasksUpdated(updatedTasks: Task[]) {
 }
 
 function onTaskClick(task: Task) {
-  console.log('Task clicked:', task)
+  selectedTask.value = task
+  taskDetailVisible.value = true
 }
 
 function goBack() {

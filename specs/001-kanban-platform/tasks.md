@@ -214,12 +214,12 @@
 
 ### 实现任务
 
-- [ ] T052 [P] 创建 backend/internal/handlers/comment.go 实现 POST /api/tasks/:id/comments
-- [ ] T053 [P] 创建 backend/internal/handlers/comment.go 实现 GET /api/tasks/:id/comments
-- [ ] T054 创建 frontend/src/api/comment.ts 实现 API 客户端
-- [ ] T055 创建 frontend/src/components/task/TaskDetail.vue 任务详情弹窗
-- [ ] T056 在 TaskDetail.vue 中集成评论列表和评论表单
-- [ ] T057 集成测试：打开任务详情 → 添加评论 → 验证评论显示
+- [x] T052 [P] 创建 backend/internal/handlers/comment.go 实现 POST /api/tasks/:id/comments
+- [x] T053 [P] 创建 backend/internal/handlers/comment.go 实现 GET /api/tasks/:id/comments
+- [x] T054 创建 frontend/src/api/comment.ts 实现 API 客户端
+- [x] T055 创建 frontend/src/components/task/TaskDetail.vue 任务详情弹窗
+- [x] T056 在 TaskDetail.vue 中集成评论列表和评论表单
+- [x] T057 集成测试：打开任务详情 → 添加评论 → 验证评论显示
 
 ---
 
@@ -234,8 +234,8 @@
 
 ### 实现任务
 
-- [ ] T058 在 TaskDetail.vue 中完善任务详情展示 (标题、描述、状态、负责人、时间)
-- [ ] T059 集成测试：点击任务卡片 → 验证详情弹窗显示完整信息
+- [x] T058 在 TaskDetail.vue 中完善任务详情展示 (标题、描述、状态、负责人、时间)
+- [x] T059 集成测试：点击任务卡片 → 验证详情弹窗显示完整信息
 
 ---
 
@@ -250,10 +250,10 @@
 
 ### 实现任务
 
-- [ ] T060 [P] 创建 backend/internal/handlers/comment.go 实现 PUT /api/tasks/:id/comments/:cid
-- [ ] T061 在 TaskDetail.vue 中为当前用户评论添加编辑按钮
-- [ ] T062 实现评论编辑表单（内联编辑或弹窗编辑）
-- [ ] T063 集成测试：查看任务详情 → 编辑自己的评论 → 验证更新成功
+- [x] T060 [P] 创建 backend/internal/handlers/comment.go 实现 PUT /api/tasks/:id/comments/:cid
+- [x] T061 在 TaskDetail.vue 中为当前用户评论添加编辑按钮
+- [x] T062 实现评论编辑表单（内联编辑或弹窗编辑）
+- [x] T063 集成测试：查看任务详情 → 编辑自己的评论 → 验证更新成功
 
 ---
 
@@ -269,10 +269,10 @@
 
 ### 实现任务
 
-- [ ] T064 [P] 创建 backend/internal/handlers/comment.go 实现 DELETE /api/tasks/:id/comments/:cid
-- [ ] T065 在 TaskDetail.vue 中为当前用户评论添加删除按钮
-- [ ] T066 实现删除确认对话框
-- [ ] T067 集成测试：查看任务详情 → 删除自己的评论 → 验证评论移除
+- [x] T064 [P] 创建 backend/internal/handlers/comment.go 实现 DELETE /api/tasks/:id/comments/:cid
+- [x] T065 在 TaskDetail.vue 中为当前用户评论添加删除按钮
+- [x] T066 实现删除确认对话框
+- [x] T067 集成测试：查看任务详情 → 删除自己的评论 → 验证评论移除
 
 ---
 
