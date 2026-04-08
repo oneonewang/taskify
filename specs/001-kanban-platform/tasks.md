@@ -95,13 +95,13 @@
 
 ### 实现任务
 
-- [ ] T018 创建 frontend/src/stores/user.ts 实现用户状态管理 (Pinia store)
-- [ ] T019 创建 frontend/src/views/UserSelect.vue 实现用户选择页面 (显示5个预定义用户)
-- [ ] T020 创建 frontend/src/api/user.ts 实现 API 客户端 GET /api/users
-- [ ] T021 实现用户选择持久化到 localStorage，刷新保持，关闭浏览器重置
-- [ ] T022 创建 frontend/src/router/index.ts 配置路由：/ (UserSelect), /projects (ProjectKanban)
-- [ ] T023 创建 frontend/src/App.vue 基础布局组件
-- [ ] T024 集成测试：选择用户 → 跳转到项目列表 → 刷新页面 → 验证用户保持
+- [x] T018 创建 frontend/src/stores/user.ts 实现用户状态管理 (Pinia store)
+- [x] T019 创建 frontend/src/views/UserSelect.vue 实现用户选择页面 (显示5个预定义用户)
+- [x] T020 创建 frontend/src/api/user.ts 实现 API 客户端 GET /api/users
+- [x] T021 实现用户选择持久化到 localStorage，刷新保持，关闭浏览器重置
+- [x] T022 创建 frontend/src/router/index.ts 配置路由：/ (UserSelect), /projects (ProjectKanban)
+- [x] T023 创建 frontend/src/App.vue 基础布局组件
+- [x] T024 集成测试：选择用户 → 跳转到项目列表 → 刷新页面 → 验证用户保持
 
 ---
 
@@ -116,15 +116,15 @@
 
 ### 实现任务
 
-- [ ] T025 [P] 创建 backend/internal/handlers/project.go 实现 GET /api/projects, GET /api/projects/:id (含 task_counts)
-- [ ] T026 [P] 创建 backend/internal/services/kanban.go 实现看板业务逻辑
-- [ ] T027 创建 frontend/src/api/project.ts 实现 API 客户端
-- [ ] T028 创建 frontend/src/views/ProjectKanban.vue 项目看板主视图
-- [ ] T029 创建 frontend/src/components/kanban/KanbanBoard.vue 看板主组件
-- [ ] T030 创建 frontend/src/components/kanban/KanbanColumn.vue 单列组件 (显示列名、任务数、任务列表)
-- [ ] T031 创建 frontend/src/components/kanban/KanbanCard.vue 任务卡片组件 (显示标题、负责人头像/姓名)
-- [ ] T032 创建 frontend/src/stores/project.ts 实现项目状态管理
-- [ ] T033 集成测试：选择项目 → 显示看板4列 → 验证列任务数量
+- [x] T025 [P] 创建 backend/internal/handlers/project.go 实现 GET /api/projects, GET /api/projects/:id (含 task_counts)
+- [x] T026 [P] 创建 backend/internal/services/kanban.go 实现看板业务逻辑
+- [x] T027 创建 frontend/src/api/project.ts 实现 API 客户端
+- [x] T028 创建 frontend/src/views/ProjectKanban.vue 项目看板主视图
+- [x] T029 创建 frontend/src/components/kanban/KanbanBoard.vue 看板主组件
+- [x] T030 创建 frontend/src/components/kanban/KanbanColumn.vue 单列组件 (显示列名、任务数、任务列表)
+- [x] T031 创建 frontend/src/components/kanban/KanbanCard.vue 任务卡片组件 (显示标题、负责人头像/姓名)
+- [x] T032 创建 frontend/src/stores/project.ts 实现项目状态管理
+- [x] T033 集成测试：选择项目 → 显示看板4列 → 验证列任务数量
 
 ---
 
@@ -139,10 +139,10 @@
 
 ### 实现任务
 
-- [ ] T034 复用 T019 UserSelect.vue 中的用户列表展示逻辑
-- [ ] T035 创建 frontend/src/components/TeamMembers.vue 团队成员侧边栏组件
-- [ ] T036 在 ProjectKanban.vue 中集成 TeamMembers 组件
-- [ ] T037 集成测试：查看团队成员 → 验证5个用户显示正确
+- [x] T034 复用 T019 UserSelect.vue 中的用户列表展示逻辑
+- [x] T035 创建 frontend/src/components/TeamMembers.vue 团队成员侧边栏组件
+- [x] T036 在 ProjectKanban.vue 中集成 TeamMembers 组件
+- [x] T037 集成测试：查看团队成员 → 验证5个用户显示正确
 
 ---
 

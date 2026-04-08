@@ -2,3 +2,4 @@
 backend/server.exe
 backend/taskify.db
 frontend/node_modules/
+frontend/dist/
