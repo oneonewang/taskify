@@ -95,5 +95,5 @@ type UpdateTaskRequest struct {
 // UpdateStatusRequest 更新状态请求
 type UpdateStatusRequest struct {
 	Status   TaskStatus `json:"status" binding:"required"`
-	Position int        `json:"position" binding:"required"`
+	Position int        `json:"position" binding:"gte=0"`
 }

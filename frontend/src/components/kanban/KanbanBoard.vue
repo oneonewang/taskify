@@ -39,8 +39,18 @@ function getTasksByStatus(status: string): Task[] {
 // 当某一列的任务列表更新时
 function onTasksUpdated(status: string, updatedTasks: Task[]) {
   // 合并更新后的任务到总任务列表
+  // 注意：任务可能同时出现在 otherTasks 和 updatedTasks 中（如果状态还未更新）
+  // 需要去重，以 updatedTasks 中的任务状态为准
   const otherTasks = props.tasks.filter(t => t.status !== status)
-  emit('tasksUpdated', [...otherTasks, ...updatedTasks])
+  const merged = [...otherTasks, ...updatedTasks]
+  // 按 ID 去重，后出现的优先（updatedTasks 中的任务状态更新）
+  const seen = new Set<number>()
+  const deduplicated = merged.filter(task => {
+    if (seen.has(task.id)) return false
+    seen.add(task.id)
+    return true
+  })
+  emit('tasksUpdated', deduplicated)
 }
 </script>
 

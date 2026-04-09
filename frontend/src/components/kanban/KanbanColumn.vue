@@ -14,6 +14,7 @@
         ghost-class="ghost-card"
         drag-class="dragging-card"
         @end="onDragEnd"
+        @add="onAdd"
       >
         <KanbanCard
           v-for="task in localTasks"
@@ -94,20 +95,17 @@ watch(() => props.tasks, (newTasks) => {
 function onDragEnd() {
   // 更新父组件的任务列表
   emit('tasksUpdated', localTasks.value)
+}
 
-  // 通知任务移动
-  localTasks.value.forEach((task, index) => {
-    if (task.status !== props.status) {
-      // 任务移动到了新列
-      emit('taskMoved', task.id, props.status, index)
-    } else {
-      // 任务在同一列内移动
-      const originalTask = props.tasks.find(t => t.id === task.id)
-      if (originalTask && originalTask.position !== index) {
-        emit('taskMoved', task.id, props.status, index)
-      }
-    }
-  })
+// 任务添加到新列时触发（跨列拖拽）
+function onAdd(evt: any) {
+  const task = localTasks.value[evt.newIndex]
+  if (task && task.status !== props.status) {
+    task.status = props.status
+    emit('taskMoved', task.id, props.status, evt.newIndex)
+  }
+  // 更新父组件的任务列表
+  emit('tasksUpdated', localTasks.value)
 }
 
 // 任务创建成功
