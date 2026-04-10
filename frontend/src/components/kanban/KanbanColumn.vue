@@ -83,6 +83,11 @@ const showTaskForm = ref(false)
 const canEdit = ref(false)
 
 async function checkEditPermission() {
+  // 只有有效的项目ID才检查权限
+  if (!props.projectId || props.projectId === 0) {
+    canEdit.value = false
+    return
+  }
   canEdit.value = await permission.canEditTask(props.projectId)
 }
 

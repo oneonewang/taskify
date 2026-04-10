@@ -12,6 +12,11 @@ export function usePermission() {
 
   // 获取用户在项目中的成员资格
   async function fetchMyMembership(projectId: number): Promise<{ role_name: string; role_display_name: string } | null> {
+    // 无效的项目ID直接返回null
+    if (!projectId || projectId === 0) {
+      return null
+    }
+
     const now = Date.now()
     const cached = membershipCache.get(projectId)
 
