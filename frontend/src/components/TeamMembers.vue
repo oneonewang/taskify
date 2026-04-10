@@ -2,21 +2,22 @@
   <div class="team-members">
     <div class="members-header">
       <span class="header-title">团队成员</span>
-      <span class="member-count">{{ users.length }}</span>
+      <span class="member-count">{{ members.length }}</span>
     </div>
-    <div class="members-list">
+    <div v-if="loading" class="loading">加载中...</div>
+    <div v-else class="members-list">
       <div
-        v-for="user in users"
-        :key="user.id"
+        v-for="member in members"
+        :key="member.user_id"
         class="member-item"
-        :class="{ 'is-current': user.id === currentUserId }"
+        :class="{ 'is-current': member.user_id === currentUserId }"
       >
-        <div class="member-avatar" :style="{ backgroundColor: user.avatar }">
-          {{ user.name.charAt(0) }}
+        <div class="member-avatar" :style="{ backgroundColor: member.avatar_url || '#667eea' }">
+          {{ member.display_name.charAt(0) }}
         </div>
         <div class="member-info">
-          <div class="member-name">{{ user.name }}</div>
-          <div class="member-role">{{ roleLabel(user.role) }}</div>
+          <div class="member-name">{{ member.display_name }}</div>
+          <div class="member-role">{{ member.role_display_name || member.role_name }}</div>
         </div>
       </div>
     </div>
@@ -25,31 +26,44 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { getUsers, type User } from '../api/user'
+import { getProjectMembers } from '../api/membership'
 
 defineProps<{
   currentUserId: number | null
+  projectId: number
 }>()
 
-const users = ref<User[]>([])
+interface Member {
+  user_id: number
+  display_name: string
+  avatar_url: string
+  role_name: string
+  role_display_name: string
+}
+
+const members = ref<Member[]>([])
 const loading = ref(true)
 
 onMounted(async () => {
-  try {
-    const res = await getUsers()
-    if (res.code === 0) {
-      users.value = res.data
-    }
-  } catch (e) {
-    console.error('Failed to load users:', e)
-  } finally {
-    loading.value = false
-  }
+  // props 将在父组件确保 projectId 有效后才渲染此组件
 })
 
-function roleLabel(role: string): string {
-  return role === 'product_manager' ? '产品经理' : '工程师'
+function loadMembers(projectId: number) {
+  loading.value = true
+  members.value = []
+  getProjectMembers(projectId).then(res => {
+    if (res.code === 0 && res.data.members) {
+      members.value = res.data.members
+    }
+  }).catch(e => {
+    console.error('Failed to load members:', e)
+  }).finally(() => {
+    loading.value = false
+  })
 }
+
+// 暴露方法给父组件调用
+defineExpose({ loadMembers })
 </script>
 
 <style scoped>

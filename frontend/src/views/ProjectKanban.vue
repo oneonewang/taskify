@@ -32,7 +32,7 @@
         </template>
       </div>
       <aside class="sidebar">
-        <TeamMembers :current-user-id="currentUserId" />
+        <TeamMembers ref="teamMembersRef" :current-user-id="currentUserId" :project-id="selectedProjectId" />
       </aside>
     </div>
 
@@ -70,6 +70,7 @@ const projects = ref<Project[]>([])
 const selectedProjectId = ref<number>(0)
 const taskDetailVisible = ref(false)
 const selectedTask = ref<Task | null>(null)
+const teamMembersRef = ref<InstanceType<typeof TeamMembers> | null>(null)
 
 const currentUserId = computed(() => authStore.user?.id ?? null)
 
@@ -80,6 +81,7 @@ onMounted(async () => {
   if (projectIdFromRoute.value) {
     selectedProjectId.value = projectIdFromRoute.value
     await projectStore.loadProject(selectedProjectId.value)
+    teamMembersRef.value?.loadMembers(selectedProjectId.value)
   } else {
     // 如果没有项目ID，先获取项目列表
     try {
@@ -98,11 +100,13 @@ watch(() => route.params.id, async (newId) => {
   if (newId && Number(newId) !== selectedProjectId.value) {
     selectedProjectId.value = Number(newId)
     await projectStore.loadProject(selectedProjectId.value)
+    teamMembersRef.value?.loadMembers(selectedProjectId.value)
   }
 })
 
 async function onProjectChange(projectId: number) {
   router.push(`/projects/${projectId}`)
+  teamMembersRef.value?.loadMembers(projectId)
 }
 
 // 任务移动处理
