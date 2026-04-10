@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -23,7 +22,7 @@ func GetTasks(c *gin.Context) {
 	var tasks []models.Task
 	result := db.Order("position ASC").Find(&tasks)
 	if result.Error != nil {
-		response.Error(c, http.StatusInternalServerError, response.CodeInternalError, "获取任务列表失败")
+		response.InternalError(c, "获取任务列表失败")
 		return
 	}
 
@@ -42,21 +41,21 @@ func CreateTask(c *gin.Context) {
 
 	var req models.CreateTaskRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.Error(c, http.StatusBadRequest, response.CodeValidationError, "请求参数错误: "+err.Error())
+		response.BadRequest(c, "请求参数错误: "+err.Error())
 		return
 	}
 
 	// 验证项目存在
 	var project models.Project
 	if result := repository.GetDB().First(&project, projectID); result.Error != nil {
-		response.Error(c, http.StatusNotFound, response.CodeNotFound, "项目不存在")
+		response.NotFound(c, "项目不存在")
 		return
 	}
 
 	// 验证用户存在
 	var assignee models.User
 	if result := repository.GetDB().First(&assignee, req.AssigneeID); result.Error != nil {
-		response.Error(c, http.StatusBadRequest, response.CodeValidationError, "指定的负责人不存在")
+		response.BadRequest(c, "指定的负责人不存在")
 		return
 	}
 
@@ -78,7 +77,7 @@ func CreateTask(c *gin.Context) {
 
 	result := repository.GetDB().Create(&task)
 	if result.Error != nil {
-		response.Error(c, http.StatusInternalServerError, response.CodeInternalError, "创建任务失败")
+		response.InternalError(c, "创建任务失败")
 		return
 	}
 
@@ -94,14 +93,14 @@ func UpdateTask(c *gin.Context) {
 
 	var req models.UpdateTaskRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.Error(c, http.StatusBadRequest, response.CodeValidationError, "请求参数错误: "+err.Error())
+		response.BadRequest(c, "请求参数错误: "+err.Error())
 		return
 	}
 
 	var task models.Task
 	result := repository.GetDB().Preload("Assignee").First(&task, id)
 	if result.Error != nil {
-		response.Error(c, http.StatusNotFound, response.CodeNotFound, "任务不存在")
+		response.NotFound(c, "任务不存在")
 		return
 	}
 
@@ -116,7 +115,7 @@ func UpdateTask(c *gin.Context) {
 		// 验证新负责人存在
 		var assignee models.User
 		if result := repository.GetDB().First(&assignee, *req.AssigneeID); result.Error != nil {
-			response.Error(c, http.StatusBadRequest, response.CodeValidationError, "指定的负责人不存在")
+			response.BadRequest(c, "指定的负责人不存在")
 			return
 		}
 		task.AssigneeID = *req.AssigneeID
@@ -134,7 +133,7 @@ func UpdateTaskStatus(c *gin.Context) {
 
 	var req models.UpdateStatusRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.Error(c, http.StatusBadRequest, response.CodeValidationError, "请求参数错误: "+err.Error())
+		response.BadRequest(c, "请求参数错误: "+err.Error())
 		return
 	}
 
@@ -148,14 +147,14 @@ func UpdateTaskStatus(c *gin.Context) {
 		}
 	}
 	if !isValid {
-		response.Error(c, http.StatusBadRequest, response.CodeValidationError, "无效的状态值")
+		response.BadRequest(c, "无效的状态值")
 		return
 	}
 
 	var task models.Task
 	result := repository.GetDB().First(&task, id)
 	if result.Error != nil {
-		response.Error(c, http.StatusNotFound, response.CodeNotFound, "任务不存在")
+		response.NotFound(c, "任务不存在")
 		return
 	}
 
@@ -178,13 +177,13 @@ func DeleteTask(c *gin.Context) {
 	var task models.Task
 	result := repository.GetDB().First(&task, id)
 	if result.Error != nil {
-		response.Error(c, http.StatusNotFound, response.CodeNotFound, "任务不存在")
+		response.NotFound(c, "任务不存在")
 		return
 	}
 
 	repository.GetDB().Delete(&task)
 
-	response.SuccessWithMessage(c, nil, "任务已删除")
+	response.OK(c, "任务已删除")
 }
 
 // Helper function

@@ -1,74 +1,115 @@
 package response
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 )
 
-// SuccessResponse 成功响应结构
-type SuccessResponse struct {
-	Success bool        `json:"success"`
-	Data    interface{} `json:"data"`
-	Message string      `json:"message,omitempty"`
-}
-
-// ErrorResponse 错误响应结构
-type ErrorResponse struct {
-	Success bool        `json:"success"`
-	Error   ErrorDetail `json:"error"`
-}
-
-// ErrorDetail 错误详情
-type ErrorDetail struct {
-	Code    string      `json:"code"`
-	Message string      `json:"message"`
-	Details interface{} `json:"details,omitempty"`
-}
-
-// Success 返回成功响应
-func Success(c *gin.Context, data interface{}) {
-	c.JSON(200, SuccessResponse{
-		Success: true,
-		Data:    data,
-	})
-}
-
-// SuccessWithMessage 返回成功响应带消息
-func SuccessWithMessage(c *gin.Context, data interface{}, message string) {
-	c.JSON(200, SuccessResponse{
-		Success: true,
-		Data:    data,
-		Message: message,
-	})
-}
-
-// Error 返回错误响应
-func Error(c *gin.Context, httpStatus int, code string, message string) {
-	c.JSON(httpStatus, ErrorResponse{
-		Success: false,
-		Error: ErrorDetail{
-			Code:    code,
-			Message: message,
-		},
-	})
-}
-
-// ErrorWithDetails 返回错误响应带详情
-func ErrorWithDetails(c *gin.Context, httpStatus int, code string, message string, details interface{}) {
-	c.JSON(httpStatus, ErrorResponse{
-		Success: false,
-		Error: ErrorDetail{
-			Code:    code,
-			Message: message,
-			Details: details,
-		},
-	})
-}
-
-// 预定义错误码
+// 错误码定义
 const (
-	CodeValidationError = "VALIDATION_ERROR"
-	CodeUnauthorized    = "UNAUTHORIZED"
-	CodeForbidden        = "FORBIDDEN"
-	CodeNotFound         = "NOT_FOUND"
-	CodeInternalError    = "INTERNAL_ERROR"
+	CodeSuccess       = 0
+	CodeBadRequest    = 400
+	CodeUnauthorized  = 401
+	CodeForbidden     = 403
+	CodeNotFound      = 404
+	CodeConflict      = 409
+	CodeInternalError = 500
 )
+
+// Response 统一响应格式
+type Response struct {
+	Code    int         `json:"code"`
+	Message string      `json:"message"`
+	Data    interface{} `json:"data"`
+}
+
+// Success 成功响应
+func Success(c *gin.Context, data interface{}) {
+	c.JSON(http.StatusOK, Response{
+		Code:    CodeSuccess,
+		Message: "success",
+		Data:    data,
+	})
+}
+
+// Created 创建成功响应
+func Created(c *gin.Context, message string, data interface{}) {
+	c.JSON(http.StatusCreated, Response{
+		Code:    CodeSuccess,
+		Message: message,
+		Data:    data,
+	})
+}
+
+// OK 操作成功响应
+func OK(c *gin.Context, message string) {
+	c.JSON(http.StatusOK, Response{
+		Code:    CodeSuccess,
+		Message: message,
+		Data:    nil,
+	})
+}
+
+// Error 通用错误响应
+func Error(c *gin.Context, statusCode int, message string) {
+	c.JSON(statusCode, Response{
+		Code:    statusCode,
+		Message: message,
+		Data:    nil,
+	})
+}
+
+// BadRequest 请求参数错误
+func BadRequest(c *gin.Context, message string) {
+	c.JSON(http.StatusBadRequest, Response{
+		Code:    CodeBadRequest,
+		Message: message,
+		Data:    nil,
+	})
+}
+
+// Unauthorized 未认证
+func Unauthorized(c *gin.Context, message string) {
+	c.JSON(http.StatusUnauthorized, Response{
+		Code:    CodeUnauthorized,
+		Message: message,
+		Data:    nil,
+	})
+}
+
+// Forbidden 权限不足
+func Forbidden(c *gin.Context, message string) {
+	c.JSON(http.StatusForbidden, Response{
+		Code:    CodeForbidden,
+		Message: message,
+		Data:    nil,
+	})
+}
+
+// NotFound 资源不存在
+func NotFound(c *gin.Context, message string) {
+	c.JSON(http.StatusNotFound, Response{
+		Code:    CodeNotFound,
+		Message: message,
+		Data:    nil,
+	})
+}
+
+// Conflict 资源冲突
+func Conflict(c *gin.Context, message string) {
+	c.JSON(http.StatusConflict, Response{
+		Code:    CodeConflict,
+		Message: message,
+		Data:    nil,
+	})
+}
+
+// InternalError 服务器内部错误
+func InternalError(c *gin.Context, message string) {
+	c.JSON(http.StatusInternalServerError, Response{
+		Code:    CodeInternalError,
+		Message: message,
+		Data:    nil,
+	})
+}

@@ -9,7 +9,9 @@ type Project struct {
 	ID          uint      `json:"id" gorm:"primaryKey;autoIncrement"`
 	Name        string    `json:"name" gorm:"type:varchar(100);not null"`
 	Description string    `json:"description" gorm:"type:varchar(500)"`
+	IsArchived  bool      `json:"is_archived" gorm:"default:false"` // 是否已归档
 	CreatedAt   time.Time `json:"created_at" gorm:"autoCreateTime"`
+	UpdatedAt   time.Time `json:"updated_at" gorm:"autoUpdateTime"`
 }
 
 // TableName 指定表名
@@ -22,6 +24,7 @@ type ProjectResponse struct {
 	ID          uint      `json:"id"`
 	Name        string    `json:"name"`
 	Description string    `json:"description"`
+	IsArchived  bool      `json:"is_archived"`
 	CreatedAt   time.Time `json:"created_at"`
 }
 
@@ -31,25 +34,12 @@ func (p *Project) ToResponse() ProjectResponse {
 		ID:          p.ID,
 		Name:        p.Name,
 		Description: p.Description,
+		IsArchived:  p.IsArchived,
 		CreatedAt:   p.CreatedAt,
 	}
 }
 
-// TaskCount 任务数量统计
-type TaskCount struct {
-	Todo       int64 `json:"todo"`
-	InProgress int64 `json:"in_progress"`
-	Review     int64 `json:"review"`
-	Done       int64 `json:"done"`
-}
-
-// ProjectDetailResponse 项目详情响应(含任务数量)
-type ProjectDetailResponse struct {
-	ProjectResponse
-	TaskCounts TaskCount `json:"task_counts"`
-}
-
-//预定义项目数据
+// 预定义项目数据（保留用于迁移参考）
 var SeedProjects = []Project{
 	{ID: 1, Name: "任务管理重构", Description: "重构现有任务管理系统，提升性能和可维护性"},
 	{ID: 2, Name: "移动端开发", Description: "开发iOS和Android移动应用"},

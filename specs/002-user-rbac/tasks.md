@@ -19,10 +19,10 @@
 
 **目的**: 项目初始化和基础结构
 
-- [ ] T001 创建后端项目结构 (`backend/internal/{models,services,handlers,middleware,repository}`)
-- [ ] T002 创建前端项目结构 (`frontend/src/{views/admin,views/projects,stores,api,router}`)
-- [ ] T003 [P] 安装后端依赖: `github.com/gorilla/sessions`, `golang.org/x/crypto/bcrypt`, `github.com/gin-contrib/sessions`
-- [ ] T004 [P] 安装前端依赖: Pinia, Vue Router (已在 package.json)
+- [x] T001 创建后端项目结构 (`backend/internal/{models,services,handlers,middleware,repository}`)
+- [x] T002 创建前端项目结构 (`frontend/src/{views/admin,views/projects,stores,api,router}`)
+- [x] T003 [P] 安装后端依赖: `github.com/gorilla/sessions`, `golang.org/x/crypto/bcrypt`, `github.com/gin-contrib/sessions`
+- [x] T004 [P] 安装前端依赖: Pinia, Vue Router (已在 package.json)
 
 ---
 
@@ -32,18 +32,18 @@
 
 **⚠️ 关键**: 此阶段未完成前，任何用户故事工作都无法开始
 
-- [ ] T005 [P] 创建 User 模型 (`backend/internal/models/user.go`) - Email, PasswordHash, DisplayName, AvatarURL, EmailVerified, LastLoginAt
-- [ ] T006 [P] 创建 Role 模型 (`backend/internal/models/role.go`) - Name, Description, IsSystem, Scope
-- [ ] T007 [P] 创建 Permission 模型 (`backend/internal/models/permission.go`) - Resource, Action, Description
-- [ ] T008 [P] 创建 RolePermission 模型 (`backend/internal/models/role_permission.go`) - RoleID, PermissionID
-- [ ] T009 [P] 创建 ProjectMembership 模型 (`backend/internal/models/project_membership.go`) - UserID, ProjectID, RoleID, JoinedAt, 唯一约束
-- [ ] T010 [P] 创建 AuditLog 模型 (`backend/internal/models/audit_log.go`) - UserID, EventType, Details, IPAddress
-- [ ] T011 [P] 更新 Project 模型 (`backend/internal/models/project.go`) - 添加 IsArchived 字段
-- [ ] T012 [P] 更新 repository/sqlite.go - AutoMigrate 添加新模型
-- [ ] T013 创建数据库预定义数据填充 (`backend/internal/repository/seed.go`) - 预定义角色和权限
-- [ ] T014 创建 Session 配置 (`backend/config/session.go`) - gorilla/sessions 内存存储，Cookie 安全设置
-- [ ] T015 创建认证中间件 (`backend/internal/middleware/auth.go`) - 验证 session，获取 user_id
-- [ ] T016 创建 RBAC 中间件 (`backend/internal/middleware/rbac.go`) - 权限检查，项目成员验证
+- [x] T005 [P] 创建 User 模型 (`backend/internal/models/user.go`) - Email, PasswordHash, DisplayName, AvatarURL, EmailVerified, LastLoginAt
+- [x] T006 [P] 创建 Role 模型 (`backend/internal/models/role.go`) - Name, Description, IsSystem, Scope
+- [x] T007 [P] 创建 Permission 模型 (`backend/internal/models/permission.go`) - Resource, Action, Description
+- [x] T008 [P] 创建 RolePermission 模型 (`backend/internal/models/role_permission.go`) - RoleID, PermissionID
+- [x] T009 [P] 创建 ProjectMembership 模型 (`backend/internal/models/project_membership.go`) - UserID, ProjectID, RoleID, JoinedAt, 唯一约束
+- [x] T010 [P] 创建 AuditLog 模型 (`backend/internal/models/audit_log.go`) - UserID, EventType, Details, IPAddress
+- [x] T011 [P] 更新 Project 模型 (`backend/internal/models/project.go`) - 添加 IsArchived 字段
+- [x] T012 [P] 更新 repository/sqlite.go - AutoMigrate 添加新模型
+- [x] T013 创建数据库预定义数据填充 (`backend/internal/repository/seed.go`) - 预定义角色和权限
+- [x] T014 创建 Session 配置 (`backend/config/session.go`) - gorilla/sessions 内存存储，Cookie 安全设置
+- [x] T015 创建认证中间件 (`backend/internal/middleware/auth.go`) - 验证 session，获取 user_id
+- [x] T016 创建 RBAC 中间件 (`backend/internal/middleware/rbac.go`) - 权限检查，项目成员验证
 
 **检查点**: 基础层完成 - 用户故事实现可以开始了
 
@@ -55,12 +55,12 @@
 
 **独立测试**: 使用 curl 测试注册、登录、登出接口，验证 session cookie 设置
 
-- [ ] T017 [US1] 创建 AuthService (`backend/internal/services/auth_service.go`) - 注册、登录验证、登出
-- [ ] T018 [US1] 创建 AuthHandler (`backend/internal/handlers/auth.go`) - POST /api/auth/register, POST /api/auth/login, POST /api/auth/logout
-- [ ] T019 [US1] 创建 UserRepository (`backend/internal/repository/user_repo.go`) - 按邮箱查询、创建用户
-- [ ] T020 [US1] 添加密码哈希 - bcrypt cost=12
-- [ ] T021 [US1] 添加 AuditLog 记录 - 登录/登出事件
-- [ ] T022 [US1] 注册 auth 路由，添加中间件
+- [x] T017 [US1] 创建 AuthService (`backend/internal/services/auth_service.go`) - 注册、登录验证、登出
+- [x] T018 [US1] 创建 AuthHandler (`backend/internal/handlers/auth.go`) - POST /api/auth/register, POST /api/auth/login, POST /api/auth/logout
+- [x] T019 [US1] 创建 UserRepository (`backend/internal/repository/user_repo.go`) - 按邮箱查询、创建用户
+- [x] T020 [US1] 添加密码哈希 - bcrypt cost=12
+- [x] T021 [US1] 添加 AuditLog 记录 - 登录/登出事件
+- [x] T022 [US1] 注册 auth 路由，添加中间件
 
 **检查点**: US1 完成 - 用户可以注册、登录、登出
 
@@ -150,13 +150,13 @@
 
 **独立测试**: 访问登录页，输入凭据，验证成功登录后跳转
 
-- [ ] T046 [US8] 创建登录页 (`frontend/src/views/Login.vue`)
-- [ ] T047 [US8] 创建注册页 (`frontend/src/views/Register.vue`)
-- [ ] T048 [US8] 创建 auth API 调用 (`frontend/src/api/auth.ts`)
-- [ ] T049 [US8] 创建 authStore (`frontend/src/stores/auth.ts`)
-- [ ] T050 [US8] 配置 Vue Router - `/login`, `/register`
-- [ ] T051 [US8] 添加路由守卫 - 未登录重定向到 /login
-- [ ] T052 [US8] 实现登出功能
+- [x] T046 [US8] 创建登录页 (`frontend/src/views/Login.vue`)
+- [x] T047 [US8] 创建注册页 (`frontend/src/views/Register.vue`)
+- [x] T048 [US8] 创建 auth API 调用 (`frontend/src/api/auth.ts`)
+- [x] T049 [US8] 创建 authStore (`frontend/src/stores/auth.ts`)
+- [x] T050 [US8] 配置 Vue Router - `/login`, `/register`
+- [x] T051 [US8] 添加路由守卫 - 未登录重定向到 /login
+- [x] T052 [US8] 实现登出功能
 
 **检查点**: US8 完成 - 前端用户可以注册和登录
 

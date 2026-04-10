@@ -38,9 +38,9 @@ func (Task) TableName() string {
 
 // AssigneeInfo 负责人信息
 type AssigneeInfo struct {
-	ID     uint   `json:"id"`
-	Name   string `json:"name"`
-	Avatar string `json:"avatar"`
+	ID          uint   `json:"id"`
+	DisplayName string `json:"display_name"`
+	AvatarURL   string `json:"avatar_url"`
 }
 
 // TaskResponse 任务API响应
@@ -70,9 +70,9 @@ func (t *Task) ToResponse() TaskResponse {
 	}
 	if t.Assignee != nil {
 		resp.Assignee = AssigneeInfo{
-			ID:     t.Assignee.ID,
-			Name:   t.Assignee.Name,
-			Avatar: t.Assignee.Avatar,
+			ID:          t.Assignee.ID,
+			DisplayName: t.Assignee.DisplayName,
+			AvatarURL:   t.Assignee.AvatarURL,
 		}
 	}
 	return resp

@@ -1,37 +1,12 @@
 package handlers
 
 import (
-	"encoding/json"
-	"fmt"
 	"io"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/taskify/backend/pkg/broadcaster"
 )
-
-// SSEClient SSE客户端
-type SSEClient struct {
-	Channel chan string
-}
-
-// 全局SSE客户端管理器
-var clients = make(map[*SSEClient]bool)
-
-// Broadcast 向所有客户端广播消息
-func Broadcast(event string, data interface{}) {
-	jsonData, err := json.Marshal(data)
-	if err != nil {
-		return
-	}
-	message := fmt.Sprintf("event: %s\ndata: %s\n\n", event, jsonData)
-	for client := range clients {
-		select {
-		case client.Channel <- message:
-		default:
-			// 客户端缓冲区满，跳过
-		}
-	}
-}
 
 // GetEvents 建立SSE连接
 func GetEvents(c *gin.Context) {
@@ -41,12 +16,12 @@ func GetEvents(c *gin.Context) {
 	c.Header("Connection", "keep-alive")
 	c.Header("Access-Control-Allow-Origin", "*")
 
-	client := &SSEClient{
+	client := &broadcaster.SSEClient{
 		Channel: make(chan string, 10),
 	}
-	clients[client] = true
+	broadcaster.AddClient(client)
 	defer func() {
-		delete(clients, client)
+		broadcaster.RemoveClient(client)
 		close(client.Channel)
 	}()
 

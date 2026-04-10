@@ -26,6 +26,10 @@ func main() {
 	// 创建Gin实例
 	r := gin.Default()
 
+	// 初始化会话中间件
+	sessionCfg := config.DefaultSessionConfig()
+	config.InitSession(r, sessionCfg)
+
 	// 注册中间件
 	r.Use(middleware.CORS())
 
@@ -43,25 +47,70 @@ func main() {
 func registerRoutes(r *gin.Engine) {
 	api := r.Group("/api")
 	{
-		// 用户路由
-		api.GET("/users", handlers.GetUsers)
+		// 认证路由（无需登录）
+		authHandler := handlers.NewAuthHandler()
+		auth := api.Group("/auth")
+		{
+			auth.POST("/register", authHandler.Register)
+			auth.POST("/login", authHandler.Login)
+			auth.POST("/logout", authHandler.Logout)
+		}
+
+		// 需要登录的路由
+		authRequired := api.Group("")
+		authRequired.Use(middleware.AuthRequired())
+		{
+			// 用户路由
+			authRequired.GET("/users/me", authHandler.GetCurrentUser)
+			authRequired.PUT("/users/me", authHandler.UpdateProfile)
+			authRequired.PUT("/users/me/password", authHandler.ChangePassword)
+		}
+
+		// 管理员路由
+		adminRequired := api.Group("/admin")
+		adminRequired.Use(middleware.AuthRequired(), middleware.RequireAdmin())
+		{
+			// 管理员用户管理
+			adminRequired.GET("/users", handlers.GetUsers)
+		}
 
 		// 项目路由
-		api.GET("/projects", handlers.GetProjects)
-		api.GET("/projects/:id", handlers.GetProject)
-		api.GET("/projects/:id/tasks", handlers.GetTasks)
-		api.POST("/projects/:id/tasks", handlers.CreateTask)
+		project := api.Group("/projects")
+		{
+			// 公开的查看路由（需要登录）
+			project.GET("", handlers.GetProjects)
+			project.GET("/:id", handlers.GetProject)
+			project.GET("/:id/tasks", handlers.GetTasks)
 
-		// 任务路由
-		api.PUT("/tasks/:id", handlers.UpdateTask)
-		api.PUT("/tasks/:id/status", handlers.UpdateTaskStatus)
-		api.DELETE("/tasks/:id", handlers.DeleteTask)
+			// 需要认证的路由
+			projectAuth := project.Group("")
+			projectAuth.Use(middleware.AuthRequired(), middleware.RequireProjectMember())
+			{
+				projectAuth.POST("/:id/tasks", handlers.CreateTask)
+			}
 
-		// 评论路由
-		api.GET("/tasks/:id/comments", handlers.GetComments)
-		api.POST("/tasks/:id/comments", handlers.CreateComment)
-		api.PUT("/tasks/:id/comments/:cid", handlers.UpdateComment)
-		api.DELETE("/tasks/:id/comments/:cid", handlers.DeleteComment)
+			// 项目成员管理（需要所有者权限）
+			projectOwner := project.Group("/:id")
+			projectOwner.Use(middleware.AuthRequired(), middleware.RequireProjectOwner())
+			{
+				// 项目所有者操作
+			}
+		}
+
+		// 任务路由（需要登录）
+		taskAuth := api.Group("/tasks")
+		taskAuth.Use(middleware.AuthRequired())
+		{
+			taskAuth.PUT("/:id", handlers.UpdateTask)
+			taskAuth.PUT("/:id/status", handlers.UpdateTaskStatus)
+			taskAuth.DELETE("/:id", handlers.DeleteTask)
+
+			// 评论路由
+			taskAuth.GET("/:id/comments", handlers.GetComments)
+			taskAuth.POST("/:id/comments", handlers.CreateComment)
+			taskAuth.PUT("/:id/comments/:cid", handlers.UpdateComment)
+			taskAuth.DELETE("/:id/comments/:cid", handlers.DeleteComment)
+		}
 
 		// SSE事件路由
 		api.GET("/events", handlers.GetEvents)

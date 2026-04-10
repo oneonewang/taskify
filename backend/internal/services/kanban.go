@@ -1,9 +1,9 @@
 package services
 
 import (
-	"github.com/taskify/backend/internal/handlers"
 	"github.com/taskify/backend/internal/models"
 	"github.com/taskify/backend/internal/repository"
+	"github.com/taskify/backend/pkg/broadcaster"
 	"gorm.io/gorm"
 )
 
@@ -59,7 +59,7 @@ func (s *KanbanService) MoveTask(taskID uint, newStatus models.TaskStatus, newPo
 	}
 
 	// 广播任务移动事件
-	handlers.Broadcast("task_moved", map[string]interface{}{
+	broadcaster.Broadcast("task_moved", map[string]interface{}{
 		"id":       task.ID,
 		"from":     oldStatus,
 		"to":       newStatus,
@@ -95,7 +95,7 @@ func (s *KanbanService) CreateTask(projectID uint, title, description string, as
 	s.db.Preload("Assignee").First(task, task.ID)
 
 	// 广播任务创建事件
-	handlers.Broadcast("task_created", task.ToResponse())
+	broadcaster.Broadcast("task_created", task.ToResponse())
 
 	return task, nil
 }
@@ -125,7 +125,7 @@ func (s *KanbanService) UpdateTask(taskID uint, title, description string, assig
 	s.db.Preload("Assignee").First(&task, taskID)
 
 	// 广播任务更新事件
-	handlers.Broadcast("task_updated", task.ToResponse())
+	broadcaster.Broadcast("task_updated", task.ToResponse())
 
 	return &task, nil
 }
@@ -142,7 +142,7 @@ func (s *KanbanService) DeleteTask(taskID uint) error {
 	}
 
 	// 广播任务删除事件
-	handlers.Broadcast("task_deleted", map[string]interface{}{"id": taskID})
+	broadcaster.Broadcast("task_deleted", map[string]interface{}{"id": taskID})
 
 	return nil
 }

@@ -25,9 +25,9 @@ func (Comment) TableName() string {
 
 // UserInfo 用户信息
 type UserInfo struct {
-	ID     uint   `json:"id"`
-	Name   string `json:"name"`
-	Avatar string `json:"avatar"`
+	ID          uint   `json:"id"`
+	DisplayName string `json:"display_name"`
+	AvatarURL   string `json:"avatar_url"`
 }
 
 // CommentResponse 评论API响应
@@ -51,9 +51,9 @@ func (c *Comment) ToResponse() CommentResponse {
 	}
 	if c.User != nil {
 		resp.User = UserInfo{
-			ID:     c.User.ID,
-			Name:   c.User.Name,
-			Avatar: c.User.Avatar,
+			ID:          c.User.ID,
+			DisplayName: c.User.DisplayName,
+			AvatarURL:   c.User.AvatarURL,
 		}
 	}
 	return resp

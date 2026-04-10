@@ -42,39 +42,18 @@ func InitSQLite(dbPath string) error {
 func AutoMigrate() error {
 	return DB.AutoMigrate(
 		&models.User{},
+		&models.Role{},
+		&models.Permission{},
+		&models.RolePermission{},
+		&models.ProjectMembership{},
+		&models.AuditLog{},
 		&models.Project{},
 		&models.Task{},
 		&models.Comment{},
 	)
 }
 
-// SeedData 填充种子数据
-func SeedData() error {
-	// 填充用户数据
-	for _, user := range models.SeedUsers {
-		var existing models.User
-		result := DB.First(&existing, user.ID)
-		if result.RowsAffected == 0 {
-			if err := DB.Create(&user).Error; err != nil {
-				return err
-			}
-		}
-	}
-
-	// 填充项目数据
-	for _, project := range models.SeedProjects {
-		var existing models.Project
-		result := DB.First(&existing, project.ID)
-		if result.RowsAffected == 0 {
-			if err := DB.Create(&project).Error; err != nil {
-				return err
-			}
-		}
-	}
-
-	log.Println("种子数据填充成功")
-	return nil
-}
+// SeedData 填充种子数据（由seed.go提供）
 
 // GetDB 获取数据库实例
 func GetDB() *gorm.DB {
