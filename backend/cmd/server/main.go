@@ -110,7 +110,6 @@ func registerRoutes(r *gin.Engine, projectHandler *handlers.ProjectHandler, task
 				projectOwner.PUT("", projectHandler.UpdateProject)
 				projectOwner.DELETE("", projectHandler.DeleteProject)
 				projectOwner.POST("/archive", projectHandler.ArchiveProject)
-				projectOwner.GET("/members", membershipHandler.GetProjectMembers)
 				projectOwner.POST("/members", membershipHandler.AddProjectMember)
 				projectOwner.PUT("/members/:user_id", membershipHandler.UpdateMemberRole)
 				projectOwner.DELETE("/members/:user_id", membershipHandler.RemoveProjectMember)
@@ -120,6 +119,7 @@ func registerRoutes(r *gin.Engine, projectHandler *handlers.ProjectHandler, task
 			projectMember := project.Group("/:id")
 			projectMember.Use(middleware.AuthRequired(), middleware.RequireProjectMember())
 			{
+				projectMember.GET("/members", membershipHandler.GetProjectMembers)
 				projectMember.POST("/tasks", taskHandler.CreateTask)
 				projectMember.GET("/my-membership", membershipHandler.GetMyProjectMembership)
 			}
