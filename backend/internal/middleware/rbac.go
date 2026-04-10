@@ -134,6 +134,16 @@ func RequireAdmin() gin.HandlerFunc {
 	}
 }
 
+// CheckIsAdmin 检查用户是否是系统管理员（导出版本）
+func CheckIsAdmin(userID uint) (bool, error) {
+	return checkIsAdmin(userID)
+}
+
+// CheckIsProjectMember 检查用户是否是项目成员（导出版本）
+func CheckIsProjectMember(userID, projectID uint) (bool, error) {
+	return checkIsProjectMember(userID, projectID)
+}
+
 // checkIsAdmin 检查用户是否是系统管理员
 func checkIsAdmin(userID uint) (bool, error) {
 	var count int64

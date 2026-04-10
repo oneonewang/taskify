@@ -72,9 +72,9 @@
 
 **独立测试**: 登录后获取 /api/users/me，更新资料验证返回数据变化
 
-- [ ] T023 [US2] 创建 UserService (`backend/internal/services/user_service.go`) - 获取/更新当前用户、修改密码
-- [ ] T024 [US2] 创建 UserHandler (`backend/internal/handlers/user.go`) - GET /api/users/me, PUT /api/users/me, PUT /api/users/me/password
-- [ ] T025 [US2] 添加权限控制 - 只有本人可以查看/更新自己资料
+- [x] T023 [US2] 创建 UserService (`backend/internal/services/user_service.go`) - 获取/更新当前用户、修改密码
+- [x] T024 [US2] 创建 UserHandler (`backend/internal/handlers/user.go`) - GET /api/users/me, PUT /api/users/me, PUT /api/users/me/password
+- [x] T025 [US2] 添加权限控制 - 只有本人可以查看/更新自己资料
 
 **检查点**: US2 完成 - 用户可以管理自己的资料
 
@@ -86,11 +86,11 @@
 
 **独立测试**: 管理员调用角色 CRUD 接口，验证系统预定义角色不可删除
 
-- [ ] T026 [US3] 创建 RoleService (`backend/internal/services/role_service.go`) - 角色 CRUD
-- [ ] T027 [US3] 创建 RoleHandler (`backend/internal/handlers/role.go`) - GET /api/roles, POST /api/roles, PUT /api/roles/:id, DELETE /api/roles/:id
-- [ ] T028 [US3] 创建 RoleRepository (`backend/internal/repository/role_repo.go`)
-- [ ] T029 [US3] 添加保护 - 禁止删除 IsSystem=true 的角色
-- [ ] T030 [US3] 添加保护 - 禁止删除已被分配的角色
+- [x] T026 [US3] 创建 RoleService (`backend/internal/services/role_service.go`) - 角色 CRUD
+- [x] T027 [US3] 创建 RoleHandler (`backend/internal/handlers/role.go`) - GET /api/roles, POST /api/roles, PUT /api/roles/:id, DELETE /api/roles/:id
+- [x] T028 [US3] 创建 RoleRepository (`backend/internal/repository/role_repo.go`)
+- [x] T029 [US3] 添加保护 - 禁止删除 IsSystem=true 的角色
+- [x] T030 [US3] 添加保护 - 禁止删除已被分配的角色
 
 **检查点**: US3 完成 - 管理员可以管理系统角色
 
@@ -102,11 +102,11 @@
 
 **独立测试**: 编辑角色权限，验证权限变更立即生效
 
-- [ ] T031 [US4] 创建 PermissionService (`backend/internal/services/permission_service.go`)
-- [ ] T032 [US4] 创建 PermissionHandler (`backend/internal/handlers/permission.go`) - GET /api/permissions
-- [ ] T033 [US4] 扩展 RoleHandler - PUT /api/roles/:id/permissions
-- [ ] T034 [US4] 创建 PermissionRepository (`backend/internal/repository/permission_repo.go`)
-- [ ] T035 [US4] 添加 AuditLog 记录 - 权限变更
+- [x] T031 [US4] 创建 PermissionService (`backend/internal/services/permission_service.go`)
+- [x] T032 [US4] 创建 PermissionHandler (`backend/internal/handlers/permission.go`) - GET /api/permissions
+- [x] T033 [US4] 扩展 RoleHandler - PUT /api/roles/:id/permissions
+- [x] T034 [US4] 创建 PermissionRepository (`backend/internal/repository/permission_repo.go`)
+- [x] T035 [US4] 添加 AuditLog 记录 - 权限变更
 
 **检查点**: US4 完成 - 管理员可以配置角色权限
 
@@ -118,11 +118,11 @@
 
 **独立测试**: 为用户分配角色，验证用户获得相应权限
 
-- [ ] T036 [US5] 创建 MembershipService (`backend/internal/services/membership_service.go`)
-- [ ] T037 [US5] 创建 MembershipHandler (`backend/internal/handlers/membership.go`) - /api/users/:id/roles, /api/projects/:id/members
-- [ ] T038 [US5] 创建 MembershipRepository (`backend/internal/repository/membership_repo.go`)
-- [ ] T039 [US5] 添加保护 - 禁止移除最后一个系统管理员
-- [ ] T040 [US5] 添加 /api/users/:id/project-memberships 端点
+- [x] T036 [US5] 创建 MembershipService (`backend/internal/services/membership_service.go`)
+- [x] T037 [US5] 创建 MembershipHandler (`backend/internal/handlers/membership.go`) - /api/users/:id/roles, /api/projects/:id/members
+- [x] T038 [US5] 创建 MembershipRepository (`backend/internal/repository/membership_repo.go`)
+- [x] T039 [US5] 添加保护 - 禁止移除最后一个系统管理员
+- [x] T040 [US5] 添加 /api/users/:id/project-memberships 端点
 
 **检查点**: US5 完成 - 管理员可以为用户分配角色
 
@@ -134,12 +134,12 @@
 
 **独立测试**: 创建项目成为 Owner，添加/移除/修改成员角色
 
-- [ ] T041 [US6] 改造 ProjectService (`backend/internal/services/project_service.go`) - CRUD、自动分配 Owner
-- [ ] T042 [US6] 改造 ProjectHandler (`backend/internal/handlers/project.go`) - POST /api/projects, PUT /api/projects/:id, DELETE /api/projects/:id, POST /api/projects/:id/archive
+- [x] T041 [US6] 改造 ProjectService (`backend/internal/services/project_service.go`) - CRUD、自动分配 Owner
+- [x] T042 [US6] 改造 ProjectHandler (`backend/internal/handlers/project.go`) - POST /api/projects, PUT /api/projects/:id, DELETE /api/projects/:id, POST /api/projects/:id/archive
   - **注意**: DELETE /api/projects/:id 必须 cascade 删除所有关联任务和评论
-- [ ] T043 [US6] 添加成员管理端点 - GET /api/projects/:id/members, POST /api/projects/:id/members, PUT /api/projects/:id/members/:user_id, DELETE /api/projects/:id/members/:user_id
-- [ ] T044 [US6] 添加权限检查 - 只有 Owner 可以管理成员、删除/归档项目
-- [ ] T045 [US6] 添加 AuditLog 记录 - 项目创建/删除/归档、成员变更
+- [x] T043 [US6] 添加成员管理端点 - GET /api/projects/:id/members, POST /api/projects/:id/members, PUT /api/projects/:id/members/:user_id, DELETE /api/projects/:id/members/:user_id
+- [x] T044 [US6] 添加权限检查 - 只有 Owner 可以管理成员、删除/归档项目
+- [x] T045 [US6] 添加 AuditLog 记录 - 项目创建/删除/归档、成员变更
 
 **检查点**: US6+US7 完成 - 项目创建和成员管理功能可用
 
@@ -220,10 +220,10 @@
 
 **目的**: 为现有 API 添加认证和权限中间件
 
-- [ ] T073 改造 task.go - 所有端点添加 auth 中间件
-- [ ] T074 改造 task.go - 添加项目成员权限检查
-- [ ] T075 改造 project.go - 添加 auth 中间件
-- [ ] T076 改造 comment.go - 添加 auth 中间件
+- [x] T073 改造 task.go - 所有端点添加 auth 中间件
+- [x] T074 改造 task.go - 添加项目成员权限检查
+- [x] T075 改造 project.go - 添加 auth 中间件
+- [x] T076 改造 comment.go - 添加 auth 中间件
 - [ ] T077 [P] 更新前端 API 调用 - 所有请求携带 session cookie
 
 **检查点**: 现有 API 全部添加权限控制

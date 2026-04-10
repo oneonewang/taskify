@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/taskify/backend/internal/middleware"
 	"github.com/taskify/backend/internal/models"
 	"github.com/taskify/backend/internal/repository"
 	"github.com/taskify/backend/pkg/broadcaster"
@@ -12,7 +13,32 @@ import (
 
 // GetComments 获取任务的评论列表
 func GetComments(c *gin.Context) {
-	taskID := c.Param("id")
+	taskIDStr := c.Param("id")
+	taskID, err := strconv.ParseUint(taskIDStr, 10, 64)
+	if err != nil {
+		response.BadRequest(c, "无效的任务ID")
+		return
+	}
+
+	// 验证任务存在并获取项目ID
+	var task models.Task
+	if result := repository.GetDB().First(&task, taskID); result.Error != nil {
+		response.NotFound(c, "任务不存在")
+		return
+	}
+
+	// 获取当前用户ID
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		response.Unauthorized(c, "请先登录")
+		return
+	}
+
+	// 检查项目访问权限
+	if !checkTaskProjectAccess(userID, task.ProjectID) {
+		response.Forbidden(c, "您不是该项目成员")
+		return
+	}
 
 	var comments []models.Comment
 	result := repository.GetDB().Preload("User").Where("task_id = ?", taskID).Order("created_at ASC").Find(&comments)
@@ -32,17 +58,17 @@ func GetComments(c *gin.Context) {
 
 // CreateComment 添加评论
 func CreateComment(c *gin.Context) {
-	taskID := c.Param("id")
-	userIDHeader := c.GetHeader("X-User-ID")
-
-	if userIDHeader == "" {
-		response.Unauthorized(c, "缺少用户认证信息")
+	taskIDStr := c.Param("id")
+	taskID, err := strconv.ParseUint(taskIDStr, 10, 64)
+	if err != nil {
+		response.BadRequest(c, "无效的任务ID")
 		return
 	}
 
-	userID, err := strconv.ParseUint(userIDHeader, 10, 32)
-	if err != nil {
-		response.BadRequest(c, "无效的用户ID")
+	// 获取当前用户ID
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -59,6 +85,12 @@ func CreateComment(c *gin.Context) {
 		return
 	}
 
+	// 检查项目访问权限
+	if !checkTaskProjectAccess(userID, task.ProjectID) {
+		response.Forbidden(c, "您不是该项目成员")
+		return
+	}
+
 	// 验证用户存在
 	var user models.User
 	if result := repository.GetDB().First(&user, userID); result.Error != nil {
@@ -68,8 +100,8 @@ func CreateComment(c *gin.Context) {
 
 	comment := models.Comment{
 		Content: req.Content,
-		UserID:  uint(userID),
-		TaskID:  uint(taskIDUint(taskID)),
+		UserID:  userID,
+		TaskID:  uint(taskID),
 	}
 
 	result := repository.GetDB().Create(&comment)
@@ -89,18 +121,13 @@ func CreateComment(c *gin.Context) {
 
 // UpdateComment 编辑评论
 func UpdateComment(c *gin.Context) {
-	taskID := c.Param("id")
-	commentID := c.Param("cid")
-	userIDHeader := c.GetHeader("X-User-ID")
+	taskIDStr := c.Param("id")
+	commentIDStr := c.Param("cid")
 
-	if userIDHeader == "" {
-		response.Unauthorized(c, "缺少用户认证信息")
-		return
-	}
-
-	userID, err := strconv.ParseUint(userIDHeader, 10, 32)
-	if err != nil {
-		response.BadRequest(c, "无效的用户ID")
+	// 获取当前用户ID
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -111,20 +138,33 @@ func UpdateComment(c *gin.Context) {
 	}
 
 	var comment models.Comment
-	result := repository.GetDB().Preload("User").First(&comment, commentID)
+	result := repository.GetDB().Preload("User").First(&comment, commentIDStr)
 	if result.Error != nil {
 		response.NotFound(c, "评论不存在")
 		return
 	}
 
 	// 验证评论是否属于该任务
-	if strconv.FormatUint(uint64(comment.TaskID), 10) != taskID {
+	if strconv.FormatUint(uint64(comment.TaskID), 10) != taskIDStr {
 		response.BadRequest(c, "评论不属于该任务")
 		return
 	}
 
+	// 验证任务存在并获取项目ID用于权限检查
+	var task models.Task
+	if result := repository.GetDB().First(&task, taskIDStr); result.Error != nil {
+		response.NotFound(c, "任务不存在")
+		return
+	}
+
+	// 检查项目访问权限
+	if !checkTaskProjectAccess(userID, task.ProjectID) {
+		response.Forbidden(c, "您不是该项目成员")
+		return
+	}
+
 	// 验证是否是评论作者
-	if comment.UserID != uint(userID) {
+	if comment.UserID != userID {
 		response.Forbidden(c, "只能编辑自己的评论")
 		return
 	}
@@ -137,36 +177,44 @@ func UpdateComment(c *gin.Context) {
 
 // DeleteComment 删除评论
 func DeleteComment(c *gin.Context) {
-	taskID := c.Param("id")
-	commentID := c.Param("cid")
-	userIDHeader := c.GetHeader("X-User-ID")
+	taskIDStr := c.Param("id")
+	commentIDStr := c.Param("cid")
 
-	if userIDHeader == "" {
-		response.Unauthorized(c, "缺少用户认证信息")
-		return
-	}
-
-	userID, err := strconv.ParseUint(userIDHeader, 10, 32)
-	if err != nil {
-		response.BadRequest(c, "无效的用户ID")
+	// 获取当前用户ID
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		response.Unauthorized(c, "请先登录")
 		return
 	}
 
 	var comment models.Comment
-	result := repository.GetDB().First(&comment, commentID)
+	result := repository.GetDB().First(&comment, commentIDStr)
 	if result.Error != nil {
 		response.NotFound(c, "评论不存在")
 		return
 	}
 
 	// 验证评论是否属于该任务
-	if strconv.FormatUint(uint64(comment.TaskID), 10) != taskID {
+	if strconv.FormatUint(uint64(comment.TaskID), 10) != taskIDStr {
 		response.BadRequest(c, "评论不属于该任务")
 		return
 	}
 
+	// 验证任务存在并获取项目ID用于权限检查
+	var task models.Task
+	if result := repository.GetDB().First(&task, taskIDStr); result.Error != nil {
+		response.NotFound(c, "任务不存在")
+		return
+	}
+
+	// 检查项目访问权限
+	if !checkTaskProjectAccess(userID, task.ProjectID) {
+		response.Forbidden(c, "您不是该项目成员")
+		return
+	}
+
 	// 验证是否是评论作者
-	if comment.UserID != uint(userID) {
+	if comment.UserID != userID {
 		response.Forbidden(c, "只能删除自己的评论")
 		return
 	}
