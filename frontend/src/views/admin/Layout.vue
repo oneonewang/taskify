@@ -13,6 +13,10 @@
           <span class="nav-icon">🔐</span>
           <span>角色管理</span>
         </router-link>
+        <router-link to="/admin/audit-logs" class="nav-item">
+          <span class="nav-icon">📋</span>
+          <span>审计日志</span>
+        </router-link>
       </nav>
       <div class="sidebar-footer">
         <router-link to="/projects" class="back-link">

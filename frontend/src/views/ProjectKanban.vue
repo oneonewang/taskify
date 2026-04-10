@@ -12,6 +12,7 @@
           />
         </el-select>
         <el-button v-if="canManageProject" @click="goToSettings">项目设置</el-button>
+        <el-button @click="goToProfile">个人资料</el-button>
         <el-button @click="handleLogout">退出登录</el-button>
       </div>
     </div>
@@ -126,6 +127,10 @@ async function onProjectChange(projectId: number) {
 
 function goToSettings() {
   router.push(`/projects/${selectedProjectId.value}/settings`)
+}
+
+function goToProfile() {
+  router.push('/profile')
 }
 
 // 任务移动处理
