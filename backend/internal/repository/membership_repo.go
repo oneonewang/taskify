@@ -63,6 +63,25 @@ func (r *MembershipRepository) CountByRole(roleID uint) (int64, error) {
 	return count, err
 }
 
+// IsAdmin 检查用户是否是系统管理员
+func (r *MembershipRepository) IsAdmin(userID uint) (bool, error) {
+	var count int64
+	err := r.db.Model(&models.ProjectMembership{}).
+		Joins("JOIN roles ON project_memberships.role_id = roles.id").
+		Where("project_memberships.user_id = ? AND roles.name = ? AND roles.scope = ?", userID, models.RoleAdmin, "system").
+		Count(&count).Error
+	return count > 0, err
+}
+
+// IsMember 检查用户是否是项目成员
+func (r *MembershipRepository) IsMember(userID, projectID uint) (bool, error) {
+	var count int64
+	err := r.db.Model(&models.ProjectMembership{}).
+		Where("user_id = ? AND project_id = ?", userID, projectID).
+		Count(&count).Error
+	return count > 0, err
+}
+
 // GetUserMembershipsWithDetails 获取用户的成员资格详情
 func (r *MembershipRepository) GetUserMembershipsWithDetails(userID uint) ([]map[string]interface{}, error) {
 	var results []map[string]interface{}

@@ -6,26 +6,27 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/taskify/backend/internal/middleware"
 	"github.com/taskify/backend/internal/models"
-	"github.com/taskify/backend/internal/repository"
+	"github.com/taskify/backend/internal/services"
 	"github.com/taskify/backend/pkg/broadcaster"
 	"github.com/taskify/backend/pkg/response"
 )
 
-// GetComments 获取任务的评论列表
-func GetComments(c *gin.Context) {
-	taskIDStr := c.Param("id")
-	taskID, err := strconv.ParseUint(taskIDStr, 10, 64)
-	if err != nil {
-		response.BadRequest(c, "无效的任务ID")
-		return
-	}
+// CommentHandler 评论处理器
+type CommentHandler struct {
+	commentService *services.CommentService
+}
 
-	// 验证任务存在并获取项目ID
-	var task models.Task
-	if result := repository.GetDB().First(&task, taskID); result.Error != nil {
-		response.NotFound(c, "任务不存在")
-		return
+// NewCommentHandler 创建评论处理器
+func NewCommentHandler() *CommentHandler {
+	return &CommentHandler{
+		commentService: services.NewCommentService(),
 	}
+}
+
+// GetComments 获取任务的评论列表
+func (h *CommentHandler) GetComments(c *gin.Context) {
+	taskIDStr := c.Param("id")
+	taskID := uint(parseUint(taskIDStr))
 
 	// 获取当前用户ID
 	userID, ok := middleware.GetUserID(c)
@@ -34,15 +35,22 @@ func GetComments(c *gin.Context) {
 		return
 	}
 
+	// 验证任务存在并获取项目ID
+	task, err := h.commentService.GetTask(taskID)
+	if err != nil {
+		response.NotFound(c, "任务不存在")
+		return
+	}
+
 	// 检查项目访问权限
-	if !checkTaskProjectAccess(userID, task.ProjectID) {
+	hasAccess, err := h.commentService.CheckProjectAccess(userID, task.ProjectID)
+	if err != nil || !hasAccess {
 		response.Forbidden(c, "您不是该项目成员")
 		return
 	}
 
-	var comments []models.Comment
-	result := repository.GetDB().Preload("User").Where("task_id = ?", taskID).Order("created_at ASC").Find(&comments)
-	if result.Error != nil {
+	comments, err := h.commentService.GetComments(taskID)
+	if err != nil {
 		response.InternalError(c, "获取评论列表失败")
 		return
 	}
@@ -57,18 +65,28 @@ func GetComments(c *gin.Context) {
 }
 
 // CreateComment 添加评论
-func CreateComment(c *gin.Context) {
+func (h *CommentHandler) CreateComment(c *gin.Context) {
 	taskIDStr := c.Param("id")
-	taskID, err := strconv.ParseUint(taskIDStr, 10, 64)
-	if err != nil {
-		response.BadRequest(c, "无效的任务ID")
-		return
-	}
+	taskID := uint(parseUint(taskIDStr))
 
 	// 获取当前用户ID
 	userID, ok := middleware.GetUserID(c)
 	if !ok {
 		response.Unauthorized(c, "请先登录")
+		return
+	}
+
+	// 验证任务存在并获取项目ID
+	task, err := h.commentService.GetTask(taskID)
+	if err != nil {
+		response.NotFound(c, "任务不存在")
+		return
+	}
+
+	// 检查项目访问权限
+	hasAccess, err := h.commentService.CheckProjectAccess(userID, task.ProjectID)
+	if err != nil || !hasAccess {
+		response.Forbidden(c, "您不是该项目成员")
 		return
 	}
 
@@ -78,40 +96,11 @@ func CreateComment(c *gin.Context) {
 		return
 	}
 
-	// 验证任务存在
-	var task models.Task
-	if result := repository.GetDB().First(&task, taskID); result.Error != nil {
-		response.NotFound(c, "任务不存在")
-		return
-	}
-
-	// 检查项目访问权限
-	if !checkTaskProjectAccess(userID, task.ProjectID) {
-		response.Forbidden(c, "您不是该项目成员")
-		return
-	}
-
-	// 验证用户存在
-	var user models.User
-	if result := repository.GetDB().First(&user, userID); result.Error != nil {
-		response.BadRequest(c, "用户不存在")
-		return
-	}
-
-	comment := models.Comment{
-		Content: req.Content,
-		UserID:  userID,
-		TaskID:  uint(taskID),
-	}
-
-	result := repository.GetDB().Create(&comment)
-	if result.Error != nil {
+	comment, err := h.commentService.CreateComment(taskID, userID, req.Content)
+	if err != nil {
 		response.InternalError(c, "创建评论失败")
 		return
 	}
-
-	// 重新加载关联数据
-	repository.GetDB().Preload("User").First(&comment, comment.ID)
 
 	// 广播评论添加事件
 	broadcaster.Broadcast("comment_added", comment.ToResponse())
@@ -120,9 +109,10 @@ func CreateComment(c *gin.Context) {
 }
 
 // UpdateComment 编辑评论
-func UpdateComment(c *gin.Context) {
+func (h *CommentHandler) UpdateComment(c *gin.Context) {
 	taskIDStr := c.Param("id")
 	commentIDStr := c.Param("cid")
+	commentID := uint(parseUint(commentIDStr))
 
 	// 获取当前用户ID
 	userID, ok := middleware.GetUserID(c)
@@ -131,15 +121,9 @@ func UpdateComment(c *gin.Context) {
 		return
 	}
 
-	var req models.UpdateCommentRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "请求参数错误: "+err.Error())
-		return
-	}
-
-	var comment models.Comment
-	result := repository.GetDB().Preload("User").First(&comment, commentIDStr)
-	if result.Error != nil {
+	// 获取评论信息
+	comment, err := h.commentService.GetComment(commentID)
+	if err != nil {
 		response.NotFound(c, "评论不存在")
 		return
 	}
@@ -151,14 +135,15 @@ func UpdateComment(c *gin.Context) {
 	}
 
 	// 验证任务存在并获取项目ID用于权限检查
-	var task models.Task
-	if result := repository.GetDB().First(&task, taskIDStr); result.Error != nil {
+	task, err := h.commentService.GetTask(comment.TaskID)
+	if err != nil {
 		response.NotFound(c, "任务不存在")
 		return
 	}
 
 	// 检查项目访问权限
-	if !checkTaskProjectAccess(userID, task.ProjectID) {
+	hasAccess, err := h.commentService.CheckProjectAccess(userID, task.ProjectID)
+	if err != nil || !hasAccess {
 		response.Forbidden(c, "您不是该项目成员")
 		return
 	}
@@ -169,16 +154,26 @@ func UpdateComment(c *gin.Context) {
 		return
 	}
 
-	comment.Content = req.Content
-	repository.GetDB().Save(&comment)
+	var req models.UpdateCommentRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "请求参数错误: "+err.Error())
+		return
+	}
 
-	response.Success(c, comment.ToResponse())
+	updatedComment, err := h.commentService.UpdateComment(commentID, req.Content)
+	if err != nil {
+		response.InternalError(c, "更新评论失败")
+		return
+	}
+
+	response.Success(c, updatedComment.ToResponse())
 }
 
 // DeleteComment 删除评论
-func DeleteComment(c *gin.Context) {
+func (h *CommentHandler) DeleteComment(c *gin.Context) {
 	taskIDStr := c.Param("id")
 	commentIDStr := c.Param("cid")
+	commentID := uint(parseUint(commentIDStr))
 
 	// 获取当前用户ID
 	userID, ok := middleware.GetUserID(c)
@@ -187,9 +182,9 @@ func DeleteComment(c *gin.Context) {
 		return
 	}
 
-	var comment models.Comment
-	result := repository.GetDB().First(&comment, commentIDStr)
-	if result.Error != nil {
+	// 获取评论信息
+	comment, err := h.commentService.GetComment(commentID)
+	if err != nil {
 		response.NotFound(c, "评论不存在")
 		return
 	}
@@ -201,14 +196,15 @@ func DeleteComment(c *gin.Context) {
 	}
 
 	// 验证任务存在并获取项目ID用于权限检查
-	var task models.Task
-	if result := repository.GetDB().First(&task, taskIDStr); result.Error != nil {
+	task, err := h.commentService.GetTask(comment.TaskID)
+	if err != nil {
 		response.NotFound(c, "任务不存在")
 		return
 	}
 
 	// 检查项目访问权限
-	if !checkTaskProjectAccess(userID, task.ProjectID) {
+	hasAccess, err := h.commentService.CheckProjectAccess(userID, task.ProjectID)
+	if err != nil || !hasAccess {
 		response.Forbidden(c, "您不是该项目成员")
 		return
 	}
@@ -219,13 +215,10 @@ func DeleteComment(c *gin.Context) {
 		return
 	}
 
-	repository.GetDB().Delete(&comment)
+	if err := h.commentService.DeleteComment(commentID); err != nil {
+		response.InternalError(c, "删除评论失败")
+		return
+	}
 
 	response.OK(c, "评论已删除")
-}
-
-// Helper function
-func taskIDUint(id string) uint {
-	uintID, _ := strconv.ParseUint(id, 10, 32)
-	return uint(uintID)
 }

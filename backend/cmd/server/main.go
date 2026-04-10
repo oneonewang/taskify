@@ -35,7 +35,9 @@ func main() {
 
 	// 注册路由
 	projectHandler := handlers.NewProjectHandler()
-	registerRoutes(r, projectHandler)
+	taskHandler := handlers.NewTaskHandler()
+	commentHandler := handlers.NewCommentHandler()
+	registerRoutes(r, projectHandler, taskHandler, commentHandler)
 
 	// 启动服务器
 	log.Printf("服务器启动在端口 %s", cfg.Port)
@@ -45,7 +47,7 @@ func main() {
 }
 
 // registerRoutes 注册所有路由
-func registerRoutes(r *gin.Engine, projectHandler *handlers.ProjectHandler) {
+func registerRoutes(r *gin.Engine, projectHandler *handlers.ProjectHandler, taskHandler *handlers.TaskHandler, commentHandler *handlers.CommentHandler) {
 	api := r.Group("/api")
 	{
 		// 认证路由（无需登录）
@@ -99,14 +101,7 @@ func registerRoutes(r *gin.Engine, projectHandler *handlers.ProjectHandler) {
 			// 公开的查看路由（需要登录）
 			project.GET("", handlers.GetProjects)
 			project.GET("/:id", handlers.GetProject)
-			project.GET("/:id/tasks", handlers.GetTasks)
-
-			// 需要认证的路由
-			projectAuth := project.Group("")
-			projectAuth.Use(middleware.AuthRequired(), middleware.RequireProjectMember())
-			{
-				projectAuth.POST("/:id/tasks", handlers.CreateTask)
-			}
+			project.GET("/:id/tasks", taskHandler.GetTasks)
 
 			// 项目所有者操作
 			projectOwner := project.Group("/:id")
@@ -121,6 +116,13 @@ func registerRoutes(r *gin.Engine, projectHandler *handlers.ProjectHandler) {
 				projectOwner.DELETE("/members/:user_id", membershipHandler.RemoveProjectMember)
 			}
 
+			// 项目成员操作（需要是项目成员）
+			projectMember := project.Group("/:id")
+			projectMember.Use(middleware.AuthRequired(), middleware.RequireProjectMember())
+			{
+				projectMember.POST("/tasks", taskHandler.CreateTask)
+			}
+
 			// 项目创建（需要登录）
 			project.POST("", middleware.AuthRequired(), projectHandler.CreateProject)
 		}
@@ -129,15 +131,15 @@ func registerRoutes(r *gin.Engine, projectHandler *handlers.ProjectHandler) {
 		taskAuth := api.Group("/tasks")
 		taskAuth.Use(middleware.AuthRequired())
 		{
-			taskAuth.PUT("/:id", handlers.UpdateTask)
-			taskAuth.PUT("/:id/status", handlers.UpdateTaskStatus)
-			taskAuth.DELETE("/:id", handlers.DeleteTask)
+			taskAuth.PUT("/:id", taskHandler.UpdateTask)
+			taskAuth.PUT("/:id/status", taskHandler.UpdateTaskStatus)
+			taskAuth.DELETE("/:id", taskHandler.DeleteTask)
 
 			// 评论路由
-			taskAuth.GET("/:id/comments", handlers.GetComments)
-			taskAuth.POST("/:id/comments", handlers.CreateComment)
-			taskAuth.PUT("/:id/comments/:cid", handlers.UpdateComment)
-			taskAuth.DELETE("/:id/comments/:cid", handlers.DeleteComment)
+			taskAuth.GET("/:id/comments", commentHandler.GetComments)
+			taskAuth.POST("/:id/comments", commentHandler.CreateComment)
+			taskAuth.PUT("/:id/comments/:cid", commentHandler.UpdateComment)
+			taskAuth.DELETE("/:id/comments/:cid", commentHandler.DeleteComment)
 		}
 
 		// SSE事件路由

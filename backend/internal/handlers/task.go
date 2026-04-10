@@ -7,22 +7,29 @@ import (
 	"github.com/taskify/backend/internal/middleware"
 	"github.com/taskify/backend/internal/models"
 	"github.com/taskify/backend/internal/repository"
+	"github.com/taskify/backend/internal/services"
 	"github.com/taskify/backend/pkg/response"
 )
 
+// TaskHandler 任务处理器
+type TaskHandler struct {
+	taskService *services.TaskService
+}
+
+// NewTaskHandler 创建任务处理器
+func NewTaskHandler() *TaskHandler {
+	return &TaskHandler{
+		taskService: services.NewTaskService(),
+	}
+}
+
 // GetTasks 获取项目的所有任务
-func GetTasks(c *gin.Context) {
+func (h *TaskHandler) GetTasks(c *gin.Context) {
 	projectID := c.Param("id")
 	status := c.Query("status")
 
-	db := repository.GetDB().Preload("Assignee").Where("project_id = ?", projectID)
-	if status != "" {
-		db = db.Where("status = ?", status)
-	}
-
-	var tasks []models.Task
-	result := db.Order("position ASC").Find(&tasks)
-	if result.Error != nil {
+	tasks, err := h.taskService.GetTasksByProject(uint(parseUint(projectID)), status)
+	if err != nil {
 		response.InternalError(c, "获取任务列表失败")
 		return
 	}
@@ -37,19 +44,27 @@ func GetTasks(c *gin.Context) {
 }
 
 // CreateTask 创建新任务
-func CreateTask(c *gin.Context) {
-	projectID := c.Param("id")
+func (h *TaskHandler) CreateTask(c *gin.Context) {
+	projectIDStr := c.Param("id")
+	projectID := uint(parseUint(projectIDStr))
+
+	// 获取当前用户ID
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		response.Unauthorized(c, "请先登录")
+		return
+	}
+
+	// 检查项目访问权限
+	hasAccess, err := h.taskService.CheckProjectAccess(userID, projectID)
+	if err != nil || !hasAccess {
+		response.Forbidden(c, "您不是该项目成员")
+		return
+	}
 
 	var req models.CreateTaskRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(c, "请求参数错误: "+err.Error())
-		return
-	}
-
-	// 验证项目存在
-	var project models.Project
-	if result := repository.GetDB().First(&project, projectID); result.Error != nil {
-		response.NotFound(c, "项目不存在")
 		return
 	}
 
@@ -60,53 +75,38 @@ func CreateTask(c *gin.Context) {
 		return
 	}
 
-	// 获取该状态任务的最大position
-	var maxPosition int
-	repository.GetDB().Model(&models.Task{}).
-		Where("project_id = ? AND status = ?", projectID, models.StatusTodo).
-		Select("COALESCE(MAX(position), -1)").
-		Scan(&maxPosition)
-
-	task := models.Task{
-		Title:       req.Title,
-		Description: req.Description,
-		Status:      models.StatusTodo,
-		Position:    maxPosition + 1,
-		AssigneeID:  req.AssigneeID,
-		ProjectID:   uint(projectIDUint(projectID)),
-	}
-
-	result := repository.GetDB().Create(&task)
-	if result.Error != nil {
+	task, err := h.taskService.CreateTask(projectID, req.Title, req.Description, req.AssigneeID)
+	if err != nil {
 		response.InternalError(c, "创建任务失败")
 		return
 	}
 
-	// 重新加载关联数据
-	repository.GetDB().Preload("Assignee").First(&task, task.ID)
-
 	response.Success(c, task.ToResponse())
 }
 
-// checkTaskProjectAccess 检查用户是否有任务所在项目的访问权限
-func checkTaskProjectAccess(userID, taskProjectID uint) bool {
-	// 系统管理员有权限
-	if isAdmin, _ := middleware.CheckIsAdmin(userID); isAdmin {
-		return true
-	}
-	// 检查是否是项目成员
-	isMember, _ := middleware.CheckIsProjectMember(userID, taskProjectID)
-	return isMember
-}
-
 // UpdateTask 更新任务
-func UpdateTask(c *gin.Context) {
-	id := c.Param("id")
+func (h *TaskHandler) UpdateTask(c *gin.Context) {
+	idStr := c.Param("id")
+	taskID := uint(parseUint(idStr))
 
 	// 获取当前用户ID
 	userID, ok := middleware.GetUserID(c)
 	if !ok {
 		response.Unauthorized(c, "请先登录")
+		return
+	}
+
+	// 获取任务信息用于权限检查
+	task, err := h.taskService.GetTask(taskID)
+	if err != nil {
+		response.NotFound(c, "任务不存在")
+		return
+	}
+
+	// 检查项目访问权限
+	hasAccess, err := h.taskService.CheckProjectAccess(userID, task.ProjectID)
+	if err != nil || !hasAccess {
+		response.Forbidden(c, "您不是该项目成员")
 		return
 	}
 
@@ -116,26 +116,6 @@ func UpdateTask(c *gin.Context) {
 		return
 	}
 
-	var task models.Task
-	result := repository.GetDB().Preload("Assignee").First(&task, id)
-	if result.Error != nil {
-		response.NotFound(c, "任务不存在")
-		return
-	}
-
-	// 检查项目访问权限
-	if !checkTaskProjectAccess(userID, task.ProjectID) {
-		response.Forbidden(c, "您不是该项目成员")
-		return
-	}
-
-	// 更新字段
-	if req.Title != nil {
-		task.Title = *req.Title
-	}
-	if req.Description != nil {
-		task.Description = *req.Description
-	}
 	if req.AssigneeID != nil {
 		// 验证新负责人存在
 		var assignee models.User
@@ -143,23 +123,40 @@ func UpdateTask(c *gin.Context) {
 			response.BadRequest(c, "指定的负责人不存在")
 			return
 		}
-		task.AssigneeID = *req.AssigneeID
-		task.Assignee = &assignee
 	}
 
-	repository.GetDB().Save(&task)
+	updatedTask, err := h.taskService.UpdateTask(taskID, req.Title, req.Description, req.AssigneeID)
+	if err != nil {
+		response.InternalError(c, "更新任务失败")
+		return
+	}
 
-	response.Success(c, task.ToResponse())
+	response.Success(c, updatedTask.ToResponse())
 }
 
 // UpdateTaskStatus 更新任务状态(看板拖放)
-func UpdateTaskStatus(c *gin.Context) {
-	id := c.Param("id")
+func (h *TaskHandler) UpdateTaskStatus(c *gin.Context) {
+	idStr := c.Param("id")
+	taskID := uint(parseUint(idStr))
 
 	// 获取当前用户ID
 	userID, ok := middleware.GetUserID(c)
 	if !ok {
 		response.Unauthorized(c, "请先登录")
+		return
+	}
+
+	// 获取任务信息用于权限检查
+	task, err := h.taskService.GetTask(taskID)
+	if err != nil {
+		response.NotFound(c, "任务不存在")
+		return
+	}
+
+	// 检查项目访问权限
+	hasAccess, err := h.taskService.CheckProjectAccess(userID, task.ProjectID)
+	if err != nil || !hasAccess {
+		response.Forbidden(c, "您不是该项目成员")
 		return
 	}
 
@@ -183,34 +180,24 @@ func UpdateTaskStatus(c *gin.Context) {
 		return
 	}
 
-	var task models.Task
-	result := repository.GetDB().First(&task, id)
-	if result.Error != nil {
-		response.NotFound(c, "任务不存在")
+	updatedTask, err := h.taskService.UpdateTaskStatus(taskID, req.Status, req.Position)
+	if err != nil {
+		response.InternalError(c, "更新任务状态失败")
 		return
 	}
-
-	// 检查项目访问权限
-	if !checkTaskProjectAccess(userID, task.ProjectID) {
-		response.Forbidden(c, "您不是该项目成员")
-		return
-	}
-
-	task.Status = req.Status
-	task.Position = req.Position
-	repository.GetDB().Save(&task)
 
 	response.Success(c, gin.H{
-		"id":         task.ID,
-		"status":     task.Status,
-		"position":   task.Position,
-		"updated_at": task.UpdatedAt,
+		"id":         updatedTask.ID,
+		"status":     updatedTask.Status,
+		"position":   updatedTask.Position,
+		"updated_at": updatedTask.UpdatedAt,
 	})
 }
 
 // DeleteTask 删除任务
-func DeleteTask(c *gin.Context) {
-	id := c.Param("id")
+func (h *TaskHandler) DeleteTask(c *gin.Context) {
+	idStr := c.Param("id")
+	taskID := uint(parseUint(idStr))
 
 	// 获取当前用户ID
 	userID, ok := middleware.GetUserID(c)
@@ -219,26 +206,30 @@ func DeleteTask(c *gin.Context) {
 		return
 	}
 
-	var task models.Task
-	result := repository.GetDB().First(&task, id)
-	if result.Error != nil {
+	// 获取任务信息用于权限检查
+	task, err := h.taskService.GetTask(taskID)
+	if err != nil {
 		response.NotFound(c, "任务不存在")
 		return
 	}
 
 	// 检查项目访问权限
-	if !checkTaskProjectAccess(userID, task.ProjectID) {
+	hasAccess, err := h.taskService.CheckProjectAccess(userID, task.ProjectID)
+	if err != nil || !hasAccess {
 		response.Forbidden(c, "您不是该项目成员")
 		return
 	}
 
-	repository.GetDB().Delete(&task)
+	if err := h.taskService.DeleteTask(taskID); err != nil {
+		response.InternalError(c, "删除任务失败")
+		return
+	}
 
 	response.OK(c, "任务已删除")
 }
 
 // Helper function
-func projectIDUint(id string) uint {
+func parseUint(id string) uint64 {
 	uintID, _ := strconv.ParseUint(id, 10, 32)
-	return uint(uintID)
+	return uintID
 }
