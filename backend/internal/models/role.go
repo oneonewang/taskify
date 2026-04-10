@@ -8,6 +8,7 @@ import (
 type Role struct {
 	ID          uint      `gorm:"primaryKey"`                               // 唯一标识符
 	Name        string    `gorm:"uniqueIndex;size:50;not null"`              // 角色名称
+	DisplayName string    `gorm:"size:50"`                                   // 显示名称
 	Description string    `gorm:"size:255"`                                 // 角色描述
 	IsSystem    bool      `gorm:"default:false"`                            // 是否系统预定义
 	Scope       string    `gorm:"size:20;default:'system'"`                  // 作用域: system/project
@@ -24,6 +25,7 @@ func (Role) TableName() string {
 type RoleResponse struct {
 	ID          uint     `json:"id"`
 	Name        string   `json:"name"`
+	DisplayName string   `json:"display_name"`
 	Description string   `json:"description"`
 	IsSystem    bool     `json:"is_system"`
 	Scope       string   `json:"scope"`
@@ -35,6 +37,7 @@ func (r *Role) ToResponse() RoleResponse {
 	return RoleResponse{
 		ID:          r.ID,
 		Name:        r.Name,
+		DisplayName: r.DisplayName,
 		Description: r.Description,
 		IsSystem:    r.IsSystem,
 		Scope:       r.Scope,
@@ -51,8 +54,8 @@ const (
 
 // 预定义角色列表
 var SystemRoles = []Role{
-	{Name: RoleAdmin, Description: "系统管理员", IsSystem: true, Scope: "system"},
-	{Name: RoleOwner, Description: "项目所有者", IsSystem: true, Scope: "project"},
-	{Name: RoleMember, Description: "项目成员", IsSystem: true, Scope: "project"},
-	{Name: RoleGuest, Description: "项目访客", IsSystem: true, Scope: "project"},
+	{Name: RoleAdmin, DisplayName: "系统管理员", Description: "系统管理员", IsSystem: true, Scope: "system"},
+	{Name: RoleOwner, DisplayName: "项目所有者", Description: "项目所有者", IsSystem: true, Scope: "project"},
+	{Name: RoleMember, DisplayName: "项目成员", Description: "项目成员", IsSystem: true, Scope: "project"},
+	{Name: RoleGuest, DisplayName: "项目访客", Description: "项目访客", IsSystem: true, Scope: "project"},
 }
