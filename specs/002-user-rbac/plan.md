@@ -10,12 +10,12 @@
 ## Technical Context
 
 **Language/Version**: Go 1.21+
-**Primary Dependencies**: Gin (Web框架), GORM (ORM), gorilla/sessions (会话管理), bcrypt (密码哈希)
-**Storage**: SQLite (现有数据库)
+**Primary Dependencies**: Gin (Web框架), GORM (ORM), gorilla/sessions (会话管理), bcrypt (密码哈希), excelize (Excel 解析)
+**Storage**: SQLite (现有数据库废弃重建，使用 GORM AutoMigrate)
 **Testing**: go test (Go 标准测试框架)
 **Target Platform**: Linux Server (Web 应用)
 **Project Type**: Web Service + SPA (前后端分离)
-**Performance Goals**: 登录响应 <5秒，权限拒绝 <1秒，100% 安全事件记录
+**Performance Goals**: 登录响应 <2秒，权限拒绝 <500ms (p95)，100% 安全事件记录
 **Constraints**: <200ms p95 API 响应，<100MB 内存
 **Scale/Scope**: 小团队(5人)，MVP阶段，单体架构
 
@@ -26,8 +26,8 @@
 ### I. 安全优先 (Security First) - ✅ 通过
 - 所有用户输入通过 Gin binding tags 验证（type, range, format, length）
 - 使用 GORM 的 Parameterized Queries 防止 SQL 注入
-- 密码使用 bcrypt 哈希存储（不使用明文）
-- 敏感操作（登录、登出、权限变更）记录 AuditLog
+- 密码使用 bcrypt 哈希存储（cost=12，不使用明文）
+- 敏感操作（登录、登出、权限更改、密码重置、账号禁用/启用）记录 AuditLog
 - 会话令牌存储在 HTTP-only Cookie 中，防止 XSS 攻击
 
 ### II. 输入验证 (Input Validation) - ✅ 通过
@@ -69,7 +69,7 @@ specs/002-user-rbac/
 ├── quickstart.md        # Phase 1 快速开始指南
 ├── contracts/           # Phase 1 接口契约
 │   └── api-contracts.md
-└── tasks.md             # Phase 2 任务清单（/speckit.tasks 命令输出，非本命令生成）
+└── tasks.md             # Phase 2 任务清单
 ```
 
 ### Source Code (repository root)
@@ -128,6 +128,21 @@ frontend/
 **决策**: HttpOnly=true, Secure=true(生产), SameSite=Strict
 **理由**: HttpOnly 防止 XSS 读取，Secure 在 HTTPS 下才传输，SameSite 防止 CSRF。开发环境 Secure=false。
 
+#### 6. 用户禁用实现方案
+**问题**: 如何实现用户账号的软禁用？
+**决策**: 在 User 模型中添加 is_disabled 布尔字段，登录时检查该字段
+**理由**: 软禁用保留数据完整性，可随时恢复，比硬删除更安全。符合 FR-036 要求。
+
+#### 7. 密码重置机制
+**问题**: 管理员重置密码后如何传递新密码？
+**决策**: 重置为统一临时密码（admin123），用户首次登录强制修改
+**理由**: 符合 FR-032 批量导入的现有模式，统一管理更方便。当前无邮件基础设施。
+
+#### 8. Excel 文件解析
+**问题**: Go 如何解析 .xlsx 格式的批量导入文件？
+**决策**: 使用 excelize 库
+**理由**: excelize 是 Go 语言处理 Office Excel 文件的开源库，支持 .xlsx 格式的读取和写入。
+
 ### 技术选型总结
 
 | 组件 | 技术选型 | 备选方案 |
@@ -136,7 +151,68 @@ frontend/
 | ORM | GORM | sqlx, raw SQL |
 | 会话管理 | gorilla/sessions | gin-contrib/sessions |
 | 密码哈希 | bcrypt | argon2 |
+| Excel 解析 | excelize | xlsx, 360-info/go-zoom |
 | 前端框架 | Vue 3 | React |
 | UI 组件库 | Element Plus | Ant Design Vue |
 | 状态管理 | Pinia | Vuex |
 | 路由 | Vue Router 4 | - |
+
+## Phase 1: Design & Contracts
+
+### 数据模型
+
+#### User 模型更新
+```go
+type User struct {
+    ID            uint      `gorm:"primaryKey"`
+    Email         string    `gorm:"uniqueIndex;not null"`
+    PasswordHash  string    `gorm:"not null"`
+    DisplayName   string
+    AvatarURL     string
+    EmailVerified bool      `gorm:"default:false"`
+    IsDisabled    bool      `gorm:"default:false"`  // 新增：账号禁用标志
+    LastLoginAt   *time.Time
+    CreatedAt     time.Time
+    UpdatedAt     time.Time
+}
+```
+
+#### 新增 API 端点
+
+| 端点 | 方法 | 描述 |
+|------|------|------|
+| `/api/admin/users` | GET | 查询用户列表，支持筛选和分页 |
+| `/api/admin/users/:id/reset-password` | POST | 重置用户密码为临时密码 |
+| `/api/admin/users/:id/disable` | POST | 禁用用户账号 |
+| `/api/admin/users/:id/enable` | POST | 启用已禁用的用户账号 |
+
+#### 查询参数设计
+```
+GET /api/admin/users?email=xxx&display_name=xxx&role=admin&is_disabled=false&page=1&page_size=20
+```
+
+### 快速开始
+
+详见 [quickstart.md](./quickstart.md)
+
+## 复杂度追踪
+
+无违规项。
+
+## 实施检查点
+
+- [x] Phase 1 完成 - 项目初始化
+- [x] Phase 2 完成 - 基础层（6个模型、中间件）
+- [x] Phase 3 完成 - US1 用户注册登录
+- [x] Phase 4 完成 - US2 用户资料管理
+- [x] Phase 5 完成 - US3 角色管理
+- [x] Phase 6 完成 - US4 权限配置
+- [x] Phase 7 完成 - US5 用户角色分配
+- [x] Phase 8 完成 - US6+US7 项目管理与成员
+- [x] Phase 9 完成 - US8 前端登录注册
+- [x] Phase 10 完成 - US9 管理员用户管理
+- [ ] Phase 10b 待完成 - US9c 用户查询、重置密码、禁用
+- [x] Phase 11 完成 - US10 管理员角色权限
+- [x] Phase 12 完成 - US11+US12 项目管理前端+权限
+- [x] Phase 13 完成 - 改造现有 API
+- [x] Phase 14 完成 - 收尾
