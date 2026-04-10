@@ -50,18 +50,23 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { getProjects } from '../../api/project'
 import CreateProjectDialog from '../../components/project/CreateProjectDialog.vue'
 import type { Project, ApiResponse } from '../../api/project'
 
 const router = useRouter()
+const route = useRoute()
 const projects = ref<Project[]>([])
 const loading = ref(false)
 const error = ref<string | null>(null)
 const showCreateDialog = ref(false)
 
 onMounted(async () => {
+  // 检查是否通过路由跳转打开创建对话框
+  if (route.name === 'ProjectNew' || route.query.new === 'true') {
+    showCreateDialog.value = true
+  }
   await loadProjects()
 })
 

@@ -186,10 +186,10 @@
 **独立测试**: 访问 /admin/roles，编辑角色权限，验证变更
 
 - [x] T058 [US10] 创建角色管理页面 (`frontend/src/views/admin/Roles.vue`)
-- [ ] T059 [US10] 创建权限表格组件 (`frontend/src/components/admin/PermissionTable.vue`)
+- [x] T059 [US10] 创建权限表格组件 (`frontend/src/components/admin/PermissionTable.vue`)
 - [x] T060 [US10] 扩展 role API (`frontend/src/api/role.ts`)
 - [x] T061 [US10] 添加路由 - `/admin/roles`
-- [ ] T062 [US10] 创建审计日志查看 (`frontend/src/views/admin/AuditLogs.vue`)
+- [x] T062 [US10] 创建审计日志查看 (`frontend/src/views/admin/AuditLogs.vue`)
 
 **检查点**: US10 完成 - 管理员可以前端配置角色权限
 
@@ -201,16 +201,16 @@
 
 **独立测试**: 以不同角色登录，验证按钮显示/隐藏正确
 
-- [ ] T063 [US11] 创建项目管理页面 (`frontend/src/views/projects/ProjectList.vue`)
-- [ ] T064 [US11] 创建新建项目对话框 (`frontend/src/components/project/CreateProjectDialog.vue`)
-- [ ] T065 [US11] 创建项目设置页面 (`frontend/src/views/projects/ProjectSettings.vue`)
-- [ ] T066 [US11] 创建项目成员管理组件 (`frontend/src/components/project/ProjectMembers.vue`)
+- [x] T063 [US11] 创建项目管理页面 (`frontend/src/views/projects/ProjectList.vue`)
+- [x] T064 [US11] 创建新建项目对话框 (`frontend/src/components/project/CreateProjectDialog.vue`)
+- [x] T065 [US11] 创建项目设置页面 (`frontend/src/views/projects/ProjectSettings.vue`)
+- [x] T066 [US11] 创建项目成员管理组件 (`frontend/src/components/project/ProjectMembers.vue`)
 - [x] T067 [US11] 扩展 project API (`frontend/src/api/project.ts`)
-- [ ] T068 [US11] 添加路由 - `/projects`, `/projects/new`, `/projects/:id/settings`
+- [x] T068 [US11] 添加路由 - `/projects`, `/projects/new`, `/projects/:id/settings`
 - [x] T069 [US12] 创建权限函数 (`frontend/src/composables/usePermission.ts`)
-- [ ] T070 [US12] 改造看板页面 - Guest 隐藏创建/编辑任务按钮 (`frontend/src/views/ProjectKanban.vue`)
-- [ ] T071 [US12] 改造看板页面 - Member 隐藏删除项目按钮
-- [ ] T072 [US12] 全局权限控制 - 动态显示/隐藏操作按钮
+- [x] T070 [US12] 改造看板页面 - Guest 隐藏创建/编辑任务按钮 (`frontend/src/views/ProjectKanban.vue`)
+- [x] T071 [US12] 改造看板页面 - Member 隐藏删除项目按钮
+- [x] T072 [US12] 全局权限控制 - 动态显示/隐藏操作按钮
 
 **检查点**: US11+US12 完成 - 项目管理和前端权限控制完成
 

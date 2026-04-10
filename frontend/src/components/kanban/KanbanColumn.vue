@@ -31,9 +31,8 @@
     </div>
 
     <!-- 创建任务按钮 -->
-    <div class="column-footer">
+    <div v-if="canEdit && status === 'todo'" class="column-footer">
       <el-button
-        v-if="status === 'todo'"
         type="primary"
         text
         class="add-task-btn"
@@ -54,12 +53,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
 import { Plus } from '@element-plus/icons-vue'
 import type { Task } from '../../api/project'
 import KanbanCard from './KanbanCard.vue'
 import TaskForm from '../task/TaskForm.vue'
+import { usePermission } from '../../composables/usePermission'
 
 const props = defineProps<{
   name: string
@@ -75,9 +75,24 @@ const emit = defineEmits<{
   tasksUpdated: [tasks: Task[]]
 }>()
 
+const permission = usePermission()
+
 // 本地任务列表（用于拖拽）
 const localTasks = ref<Task[]>([...props.tasks])
 const showTaskForm = ref(false)
+const canEdit = ref(false)
+
+async function checkEditPermission() {
+  canEdit.value = await permission.canEditTask(props.projectId)
+}
+
+onMounted(() => {
+  checkEditPermission()
+})
+
+watch(() => props.projectId, () => {
+  checkEditPermission()
+})
 
 // 监听 tasks 变化
 watch(() => props.tasks, (newTasks) => {

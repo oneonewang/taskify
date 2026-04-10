@@ -9,6 +9,7 @@ import Register from '../views/Register.vue'
 import AdminLayout from '../views/admin/Layout.vue'
 import AdminUsers from '../views/admin/Users.vue'
 import AdminRoles from '../views/admin/Roles.vue'
+import AdminAuditLogs from '../views/admin/AuditLogs.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -37,6 +38,13 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
+      path: '/projects/new',
+      name: 'ProjectNew',
+      component: ProjectList,
+      meta: { requiresAuth: true },
+      props: { openCreateDialog: true }
+    },
+    {
       path: '/projects/:id',
       name: 'ProjectKanban',
       component: ProjectKanban,
@@ -62,6 +70,11 @@ const router = createRouter({
           path: 'roles',
           name: 'AdminRoles',
           component: AdminRoles
+        },
+        {
+          path: 'audit-logs',
+          name: 'AdminAuditLogs',
+          component: AdminAuditLogs
         }
       ]
     }
