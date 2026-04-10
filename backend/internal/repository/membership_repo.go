@@ -106,6 +106,28 @@ func (r *MembershipRepository) GetProjectMembershipsWithDetails(projectID uint) 
 	return results, err
 }
 
+// GetUserMembershipForProject 获取用户在特定项目中的成员资格详情
+func (r *MembershipRepository) GetUserMembershipForProject(userID, projectID uint) (*models.ProjectMembership, map[string]interface{}, error) {
+	var membership models.ProjectMembership
+	err := r.db.Where("user_id = ? AND project_id = ?", userID, projectID).First(&membership).Error
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var details map[string]interface{}
+	err = r.db.Table("project_memberships").
+		Select("project_memberships.*, projects.name as project_name, roles.name as role_name, roles.display_name as role_display_name").
+		Joins("JOIN projects ON project_memberships.project_id = projects.id").
+		Joins("JOIN roles ON project_memberships.role_id = roles.id").
+		Where("project_memberships.user_id = ? AND project_memberships.project_id = ?", userID, projectID).
+		Scan(&details).Error
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return &membership, details, nil
+}
+
 // AssignRole 分配角色
 func (r *MembershipRepository) AssignRole(userID, projectID, roleID uint) error {
 	// 检查是否已存在成员资格

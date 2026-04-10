@@ -121,6 +121,7 @@ func registerRoutes(r *gin.Engine, projectHandler *handlers.ProjectHandler, task
 			projectMember.Use(middleware.AuthRequired(), middleware.RequireProjectMember())
 			{
 				projectMember.POST("/tasks", taskHandler.CreateTask)
+				projectMember.GET("/my-membership", membershipHandler.GetMyProjectMembership)
 			}
 
 			// 项目创建（需要登录）

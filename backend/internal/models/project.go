@@ -38,10 +38,3 @@ func (p *Project) ToResponse() ProjectResponse {
 		CreatedAt:   p.CreatedAt,
 	}
 }
-
-// 预定义项目数据（保留用于迁移参考）
-var SeedProjects = []Project{
-	{ID: 1, Name: "任务管理重构", Description: "重构现有任务管理系统，提升性能和可维护性"},
-	{ID: 2, Name: "移动端开发", Description: "开发iOS和Android移动应用"},
-	{ID: 3, Name: "API网关升级", Description: "升级API网关，支持更多协议和认证方式"},
-}

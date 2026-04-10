@@ -91,3 +91,9 @@ export async function removeProjectMember(projectId: number, userId: number): Pr
   const res = await apiClient.delete(`/projects/${projectId}/members/${userId}`)
   return res.data
 }
+
+// 获取当前用户在项目中的成员资格
+export async function getMyProjectMembership(projectId: number): Promise<ApiResponse<ProjectMember | null>> {
+  const res = await apiClient.get(`/projects/${projectId}/my-membership`)
+  return res.data
+}

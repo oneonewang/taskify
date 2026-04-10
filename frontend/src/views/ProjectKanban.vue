@@ -45,8 +45,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '../stores/user'
 import { useProjectStore } from '../stores/project'
@@ -59,6 +59,7 @@ import TeamMembers from '../components/TeamMembers.vue'
 import TaskDetail from '../components/task/TaskDetail.vue'
 
 const router = useRouter()
+const route = useRoute()
 const userStore = useUserStore()
 const projectStore = useProjectStore()
 
@@ -66,29 +67,42 @@ const projectStore = useProjectStore()
 useSSEStoreUpdater()
 
 const projects = ref<Project[]>([])
-const selectedProjectId = ref<number>(1)
+const selectedProjectId = ref<number>(0)
 const taskDetailVisible = ref(false)
 const selectedTask = ref<Task | null>(null)
 
 const currentUserId = computed(() => userStore.currentUserId)
 
+// 从路由获取项目ID
+const projectIdFromRoute = computed(() => Number(route.params.id))
+
 onMounted(async () => {
-  try {
-    const res = await getProjects()
-    if (res.success) {
-      projects.value = res.data
-      if (projects.value.length > 0) {
-        selectedProjectId.value = projects.value[0].id
-        await projectStore.loadProject(selectedProjectId.value)
+  if (projectIdFromRoute.value) {
+    selectedProjectId.value = projectIdFromRoute.value
+    await projectStore.loadProject(selectedProjectId.value)
+  } else {
+    // 如果没有项目ID，先获取项目列表
+    try {
+      const res = await getProjects()
+      if (res.success && res.data.length > 0) {
+        router.replace(`/projects/${res.data[0].id}`)
       }
+    } catch (e) {
+      console.error('Failed to load projects:', e)
     }
-  } catch (e) {
-    console.error('Failed to load projects:', e)
+  }
+})
+
+// 监听路由变化
+watch(() => route.params.id, async (newId) => {
+  if (newId && Number(newId) !== selectedProjectId.value) {
+    selectedProjectId.value = Number(newId)
+    await projectStore.loadProject(selectedProjectId.value)
   }
 })
 
 async function onProjectChange(projectId: number) {
-  await projectStore.loadProject(projectId)
+  router.push(`/projects/${projectId}`)
 }
 
 // 任务移动处理

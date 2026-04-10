@@ -2,6 +2,8 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import UserSelect from '../views/UserSelect.vue'
 import ProjectKanban from '../views/ProjectKanban.vue'
+import ProjectList from '../views/projects/ProjectList.vue'
+import ProjectSettings from '../views/projects/ProjectSettings.vue'
 import Login from '../views/Login.vue'
 import Register from '../views/Register.vue'
 import AdminLayout from '../views/admin/Layout.vue'
@@ -30,8 +32,20 @@ const router = createRouter({
     },
     {
       path: '/projects',
+      name: 'ProjectList',
+      component: ProjectList,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/projects/:id',
       name: 'ProjectKanban',
       component: ProjectKanban,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/projects/:id/settings',
+      name: 'ProjectSettings',
+      component: ProjectSettings,
       meta: { requiresAuth: true }
     },
     {
@@ -55,7 +69,7 @@ const router = createRouter({
 })
 
 // 路由守卫
-router.beforeEach(async (to, from, next) => {
+router.beforeEach(async (to, _from, next) => {
   const authStore = useAuthStore()
 
   // 如果需要认证且用户未登录

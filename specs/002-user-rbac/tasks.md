@@ -234,11 +234,11 @@
 
 **目的**: 完善文档、安全加固、清理
 
-- [ ] T078 [P] 更新 README.md
-- [ ] T079 [P] 添加中文注释 - 检查所有新增文件的函数、类、模块注释
-- [ ] T080 代码清理 - 移除旧的 SeedUsers/SeedProjects 相关代码
-- [ ] T081 安全检查 - 确认密码 bcrypt，session HttpOnly Cookie
-- [ ] T082 验证 quickstart.md
+- [x] T078 [P] 更新 README.md
+- [x] T079 [P] 添加中文注释 - 检查所有新增文件的函数、类、模块注释
+- [x] T080 代码清理 - 移除旧的 SeedUsers/SeedProjects 相关代码
+- [x] T081 安全检查 - 确认密码 bcrypt，session HttpOnly Cookie
+- [x] T082 验证 quickstart.md (N/A - 文件不存在)
 - [ ] T083 提交所有更改
 
 ---

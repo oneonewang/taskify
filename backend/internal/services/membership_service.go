@@ -148,3 +148,12 @@ func (s *MembershipService) GetUserMemberships(userID uint) (map[string]interfac
 func (s *MembershipService) GetProjectMembers(projectID uint) ([]map[string]interface{}, error) {
 	return s.membershipRepo.GetProjectMembershipsWithDetails(projectID)
 }
+
+// GetUserMembershipForProject 获取用户在特定项目中的成员资格
+func (s *MembershipService) GetUserMembershipForProject(userID, projectID uint) (map[string]interface{}, error) {
+	_, details, err := s.membershipRepo.GetUserMembershipForProject(userID, projectID)
+	if err != nil {
+		return nil, err
+	}
+	return details, nil
+}

@@ -244,3 +244,29 @@ func (h *MembershipHandler) GetCurrentUserRoles(c *gin.Context) {
 
 	response.Success(c, memberships)
 }
+
+// GetMyProjectMembership 获取当前用户在项目中的成员资格
+// GET /api/projects/:id/my-membership
+func (h *MembershipHandler) GetMyProjectMembership(c *gin.Context) {
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		response.Unauthorized(c, "请先登录")
+		return
+	}
+
+	idStr := c.Param("id")
+	projectID, err := strconv.ParseUint(idStr, 10, 64)
+	if err != nil {
+		response.BadRequest(c, "无效的项目ID")
+		return
+	}
+
+	membership, err := h.membershipService.GetUserMembershipForProject(userID, uint(projectID))
+	if err != nil {
+		// 用户不是项目成员
+		response.Success(c, nil)
+		return
+	}
+
+	response.Success(c, membership)
+}
