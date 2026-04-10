@@ -6,7 +6,8 @@ const apiClient = axios.create({
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json'
-  }
+  },
+  withCredentials: true // 发送cookies
 })
 
 // 创建任务请求

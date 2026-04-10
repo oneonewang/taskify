@@ -169,11 +169,11 @@
 
 **独立测试**: 访问 /admin/users，查看用户列表，修改用户角色
 
-- [ ] T053 [US9] 创建管理员布局 (`frontend/src/views/admin/Layout.vue`)
-- [ ] T054 [US9] 创建用户管理页面 (`frontend/src/views/admin/Users.vue`)
-- [ ] T055 [US9] 扩展 user API (`frontend/src/api/user.ts`)
-- [ ] T056 [US9] 添加路由 - `/admin`, `/admin/users`
-- [ ] T057 [US9] 添加路由守卫 - 非管理员访问 /admin 时重定向
+- [x] T053 [US9] 创建管理员布局 (`frontend/src/views/admin/Layout.vue`)
+- [x] T054 [US9] 创建用户管理页面 (`frontend/src/views/admin/Users.vue`)
+- [x] T055 [US9] 扩展 user API (`frontend/src/api/user.ts`)
+- [x] T056 [US9] 添加路由 - `/admin`, `/admin/users`
+- [x] T057 [US9] 添加路由守卫 - 非管理员访问 /admin 时重定向
 
 **检查点**: US9 完成 - 管理员可以前端管理用户
 
@@ -185,10 +185,10 @@
 
 **独立测试**: 访问 /admin/roles，编辑角色权限，验证变更
 
-- [ ] T058 [US10] 创建角色管理页面 (`frontend/src/views/admin/Roles.vue`)
+- [x] T058 [US10] 创建角色管理页面 (`frontend/src/views/admin/Roles.vue`)
 - [ ] T059 [US10] 创建权限表格组件 (`frontend/src/components/admin/PermissionTable.vue`)
-- [ ] T060 [US10] 扩展 role API (`frontend/src/api/role.ts`)
-- [ ] T061 [US10] 添加路由 - `/admin/roles`
+- [x] T060 [US10] 扩展 role API (`frontend/src/api/role.ts`)
+- [x] T061 [US10] 添加路由 - `/admin/roles`
 - [ ] T062 [US10] 创建审计日志查看 (`frontend/src/views/admin/AuditLogs.vue`)
 
 **检查点**: US10 完成 - 管理员可以前端配置角色权限
@@ -205,9 +205,9 @@
 - [ ] T064 [US11] 创建新建项目对话框 (`frontend/src/components/project/CreateProjectDialog.vue`)
 - [ ] T065 [US11] 创建项目设置页面 (`frontend/src/views/projects/ProjectSettings.vue`)
 - [ ] T066 [US11] 创建项目成员管理组件 (`frontend/src/components/project/ProjectMembers.vue`)
-- [ ] T067 [US11] 扩展 project API (`frontend/src/api/project.ts`)
+- [x] T067 [US11] 扩展 project API (`frontend/src/api/project.ts`)
 - [ ] T068 [US11] 添加路由 - `/projects`, `/projects/new`, `/projects/:id/settings`
-- [ ] T069 [US12] 创建权限函数 (`frontend/src/composables/usePermission.ts`)
+- [x] T069 [US12] 创建权限函数 (`frontend/src/composables/usePermission.ts`)
 - [ ] T070 [US12] 改造看板页面 - Guest 隐藏创建/编辑任务按钮 (`frontend/src/views/ProjectKanban.vue`)
 - [ ] T071 [US12] 改造看板页面 - Member 隐藏删除项目按钮
 - [ ] T072 [US12] 全局权限控制 - 动态显示/隐藏操作按钮
@@ -224,7 +224,7 @@
 - [x] T074 改造 task.go - 添加项目成员权限检查
 - [x] T075 改造 project.go - 添加 auth 中间件
 - [x] T076 改造 comment.go - 添加 auth 中间件
-- [ ] T077 [P] 更新前端 API 调用 - 所有请求携带 session cookie
+- [x] T077 [P] 更新前端 API 调用 - 所有请求携带 session cookie
 
 **检查点**: 现有 API 全部添加权限控制
 

@@ -4,6 +4,9 @@ import UserSelect from '../views/UserSelect.vue'
 import ProjectKanban from '../views/ProjectKanban.vue'
 import Login from '../views/Login.vue'
 import Register from '../views/Register.vue'
+import AdminLayout from '../views/admin/Layout.vue'
+import AdminUsers from '../views/admin/Users.vue'
+import AdminRoles from '../views/admin/Roles.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -30,6 +33,23 @@ const router = createRouter({
       name: 'ProjectKanban',
       component: ProjectKanban,
       meta: { requiresAuth: true }
+    },
+    {
+      path: '/admin',
+      component: AdminLayout,
+      meta: { requiresAuth: true, requiresAdmin: true },
+      children: [
+        {
+          path: 'users',
+          name: 'AdminUsers',
+          component: AdminUsers
+        },
+        {
+          path: 'roles',
+          name: 'AdminRoles',
+          component: AdminRoles
+        }
+      ]
     }
   ]
 })
@@ -45,6 +65,15 @@ router.beforeEach(async (to, from, next) => {
 
     if (!authStore.isLoggedIn) {
       next({ name: 'Login', query: { redirect: to.fullPath } })
+      return
+    }
+  }
+
+  // 如果需要管理员权限
+  if (to.meta.requiresAdmin && !authStore.isAdmin) {
+    // 临时：如果是 admin@example.com 则允许
+    if (authStore.user?.email !== 'admin@example.com') {
+      next({ name: 'ProjectKanban' })
       return
     }
   }
