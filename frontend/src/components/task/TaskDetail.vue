@@ -150,7 +150,7 @@ import { ref, computed, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import type { Task } from '../../api/project'
 import { getComments, createComment, updateComment, deleteComment, type Comment } from '../../api/comment'
-import { useUserStore } from '../../stores/user'
+import { useAuthStore } from '../../stores/auth'
 import { useSSE } from '../../composables/useSSE'
 
 const props = defineProps<{
@@ -162,7 +162,7 @@ const emit = defineEmits<{
   'update:visible': [value: boolean]
 }>()
 
-const userStore = useUserStore()
+const authStore = useAuthStore()
 
 // SSE 监听评论添加事件
 useSSE({
@@ -213,7 +213,7 @@ const commentToDelete = ref<Comment | null>(null)
 
 // 判断是否是当前用户
 function isCurrentUser(userId: number): boolean {
-  return userStore.currentUserId === userId
+  return authStore.user?.id === userId
 }
 
 // 格式化时间

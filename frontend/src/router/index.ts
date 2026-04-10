@@ -1,6 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
-import UserSelect from '../views/UserSelect.vue'
 import ProjectKanban from '../views/ProjectKanban.vue'
 import ProjectList from '../views/projects/ProjectList.vue'
 import ProjectSettings from '../views/projects/ProjectSettings.vue'
@@ -16,8 +15,10 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      name: 'UserSelect',
-      component: UserSelect
+      redirect: () => {
+        const authStore = useAuthStore()
+        return authStore.isLoggedIn ? '/projects' : '/login'
+      }
     },
     {
       path: '/login',

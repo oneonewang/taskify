@@ -11,7 +11,7 @@
             :value="project.id"
           />
         </el-select>
-        <el-button @click="goBack">切换用户</el-button>
+        <el-button @click="handleLogout">退出登录</el-button>
       </div>
     </div>
 
@@ -48,7 +48,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { useUserStore } from '../stores/user'
+import { useAuthStore } from '../stores/auth'
 import { useProjectStore } from '../stores/project'
 import { useSSEStoreUpdater } from '../composables/useSSEStoreUpdater'
 import { getProjects } from '../api/project'
@@ -60,7 +60,7 @@ import TaskDetail from '../components/task/TaskDetail.vue'
 
 const router = useRouter()
 const route = useRoute()
-const userStore = useUserStore()
+const authStore = useAuthStore()
 const projectStore = useProjectStore()
 
 // 初始化 SSE 连接
@@ -71,7 +71,7 @@ const selectedProjectId = ref<number>(0)
 const taskDetailVisible = ref(false)
 const selectedTask = ref<Task | null>(null)
 
-const currentUserId = computed(() => userStore.currentUserId)
+const currentUserId = computed(() => authStore.user?.id ?? null)
 
 // 从路由获取项目ID
 const projectIdFromRoute = computed(() => Number(route.params.id))
@@ -146,8 +146,9 @@ function onTaskClick(task: Task) {
   taskDetailVisible.value = true
 }
 
-function goBack() {
-  router.push('/')
+async function handleLogout() {
+  await authStore.logout()
+  router.push('/login')
 }
 </script>
 
