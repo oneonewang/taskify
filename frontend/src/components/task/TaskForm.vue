@@ -38,7 +38,7 @@
           style="width: 100%"
         >
           <el-option
-            v-for="user in users"
+            v-for="user in assigneeOptions"
             :key="user.id"
             :label="user.name"
             :value="user.id"
@@ -70,8 +70,10 @@
 import { ref, computed, watch } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
 import { ElMessage } from 'element-plus'
-import { getUsers, createTask, updateTask, type CreateTaskRequest, type UpdateTaskRequest } from '../../api/task'
+import { createTask, updateTask, type CreateTaskRequest, type UpdateTaskRequest } from '../../api/task'
+import { getProjectMembers } from '../../api/membership'
 import type { Task, Assignee } from '../../api/project'
+import type { ProjectMember } from '../../api/membership'
 
 const props = defineProps<{
   visible: boolean
@@ -93,7 +95,14 @@ const isEdit = computed(() => !!props.task)
 
 const formRef = ref<FormInstance>()
 const loading = ref(false)
-const users = ref<Assignee[]>([])
+const users = ref<ProjectMember[]>([])
+
+// 转换为 Assignee 格式供下拉选择
+const assigneeOptions = computed(() => users.value.map(m => ({
+  id: m.user_id,
+  name: m.display_name,
+  avatar: m.avatar_url || '#667eea'
+})))
 
 // 表单数据
 const formData = ref({
@@ -113,15 +122,16 @@ const rules: FormRules = {
   ]
 }
 
-// 加载用户列表
+// 加载项目成员列表
 async function loadUsers() {
+  if (!props.projectId) return
   try {
-    const res = await getUsers()
-    if (res.code === 0) {
-      users.value = res.data
+    const res = await getProjectMembers(props.projectId)
+    if (res.code === 0 && res.data.members) {
+      users.value = res.data.members
     }
   } catch (e) {
-    console.error('Failed to load users:', e)
+    console.error('Failed to load members:', e)
   }
 }
 

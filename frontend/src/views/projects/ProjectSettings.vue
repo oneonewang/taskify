@@ -1,7 +1,10 @@
 <template>
   <div class="project-settings">
     <div class="page-header">
-      <h1>项目设置</h1>
+      <div class="header-left">
+        <button @click="goBack" class="btn btn-back">返回看板</button>
+        <h1>项目设置</h1>
+      </div>
     </div>
 
     <div v-if="loading" class="loading">加载中...</div>
@@ -110,6 +113,10 @@ async function loadProject() {
   }
 }
 
+function goBack() {
+  router.push(`/projects/${projectId.value}`)
+}
+
 async function handleUpdate() {
   if (!form.value.name.trim()) {
     error.value = '项目名称不能为空'
@@ -175,10 +182,29 @@ async function handleDelete() {
   margin-bottom: 24px;
 }
 
+.page-header .header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
 .page-header h1 {
   margin: 0;
   font-size: 24px;
   color: #333;
+}
+
+.page-header .btn-back {
+  padding: 8px 16px;
+  background: #f5f5f5;
+  color: #666;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.page-header .btn-back:hover {
+  background: #e0e0e0;
 }
 
 .loading, .error {

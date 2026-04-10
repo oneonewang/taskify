@@ -11,7 +11,7 @@
             :value="project.id"
           />
         </el-select>
-        <el-button @click="goToSettings">项目设置</el-button>
+        <el-button v-if="canManageProject" @click="goToSettings">项目设置</el-button>
         <el-button @click="handleLogout">退出登录</el-button>
       </div>
     </div>
@@ -52,6 +52,7 @@ import { ElMessage } from 'element-plus'
 import { useAuthStore } from '../stores/auth'
 import { useProjectStore } from '../stores/project'
 import { useSSEStoreUpdater } from '../composables/useSSEStoreUpdater'
+import { usePermission } from '../composables/usePermission'
 import { getProjects } from '../api/project'
 import { updateTaskStatus, type UpdateTaskStatusRequest } from '../api/task'
 import type { Project, Task } from '../api/project'
@@ -63,6 +64,7 @@ const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
 const projectStore = useProjectStore()
+const permission = usePermission()
 
 // 初始化 SSE 连接
 useSSEStoreUpdater()
@@ -72,8 +74,17 @@ const selectedProjectId = ref<number>(0)
 const taskDetailVisible = ref(false)
 const selectedTask = ref<Task | null>(null)
 const teamMembersRef = ref<InstanceType<typeof TeamMembers> | null>(null)
+const canManageProject = ref(false)
 
 const currentUserId = computed(() => authStore.user?.id ?? null)
+
+async function checkManagePermission() {
+  if (!selectedProjectId.value) {
+    canManageProject.value = false
+    return
+  }
+  canManageProject.value = await permission.canManageProjectMembers(selectedProjectId.value)
+}
 
 // 从路由获取项目ID
 const projectIdFromRoute = computed(() => Number(route.params.id))
@@ -83,6 +94,7 @@ onMounted(async () => {
     selectedProjectId.value = projectIdFromRoute.value
     await projectStore.loadProject(selectedProjectId.value)
     teamMembersRef.value?.loadMembers(selectedProjectId.value)
+    await checkManagePermission()
   } else {
     // 如果没有项目ID，先获取项目列表
     try {
@@ -102,12 +114,14 @@ watch(() => route.params.id, async (newId) => {
     selectedProjectId.value = Number(newId)
     await projectStore.loadProject(selectedProjectId.value)
     teamMembersRef.value?.loadMembers(selectedProjectId.value)
+    await checkManagePermission()
   }
 })
 
 async function onProjectChange(projectId: number) {
   router.push(`/projects/${projectId}`)
   teamMembersRef.value?.loadMembers(projectId)
+  await checkManagePermission()
 }
 
 function goToSettings() {
