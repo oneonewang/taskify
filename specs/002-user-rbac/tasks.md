@@ -239,7 +239,7 @@
 - [x] T080 代码清理 - 移除旧的 SeedUsers/SeedProjects 相关代码
 - [x] T081 安全检查 - 确认密码 bcrypt，session HttpOnly Cookie
 - [x] T082 验证 quickstart.md (N/A - 文件不存在)
-- [ ] T083 提交所有更改
+- [x] T083 提交所有更改
 
 ---
 
