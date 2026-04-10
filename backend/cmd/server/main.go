@@ -78,7 +78,7 @@ func registerRoutes(r *gin.Engine, projectHandler *handlers.ProjectHandler, task
 		adminRequired.Use(middleware.AuthRequired(), middleware.RequireAdmin())
 		{
 			// 管理员用户管理
-			adminRequired.GET("/users", handlers.GetUsers)
+			adminRequired.GET("/users", projectHandler.GetUsers)
 			// 角色管理
 			adminRequired.GET("/roles", roleHandler.GetRoles)
 			adminRequired.GET("/roles/:id", roleHandler.GetRole)
@@ -99,8 +99,8 @@ func registerRoutes(r *gin.Engine, projectHandler *handlers.ProjectHandler, task
 		project := api.Group("/projects")
 		{
 			// 公开的查看路由（需要登录）
-			project.GET("", handlers.GetProjects)
-			project.GET("/:id", handlers.GetProject)
+			project.GET("", projectHandler.GetProjects)
+			project.GET("/:id", projectHandler.GetProject)
 			project.GET("/:id/tasks", taskHandler.GetTasks)
 
 			// 项目所有者操作

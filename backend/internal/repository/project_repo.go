@@ -56,3 +56,26 @@ func (r *ProjectRepository) GetByUser(userID uint) ([]models.Project, error) {
 		Find(&projects).Error
 	return projects, err
 }
+
+// GetTaskCounts 获取项目的任务统计
+func (r *ProjectRepository) GetTaskCounts(projectID uint) (map[string]int64, error) {
+	counts := make(map[string]int64)
+	var todoCount, inProgressCount, reviewCount, doneCount int64
+
+	r.db.Model(&models.Task{}).Where("project_id = ? AND status = ?", projectID, models.StatusTodo).Count(&todoCount)
+	r.db.Model(&models.Task{}).Where("project_id = ? AND status = ?", projectID, models.StatusInProgress).Count(&inProgressCount)
+	r.db.Model(&models.Task{}).Where("project_id = ? AND status = ?", projectID, models.StatusReview).Count(&reviewCount)
+	r.db.Model(&models.Task{}).Where("project_id = ? AND status = ?", projectID, models.StatusDone).Count(&doneCount)
+
+	counts["todo"] = todoCount
+	counts["in_progress"] = inProgressCount
+	counts["review"] = reviewCount
+	counts["done"] = doneCount
+
+	return counts, nil
+}
+
+// CreateAuditLog 创建审计日志
+func (r *ProjectRepository) CreateAuditLog(log *models.AuditLog) error {
+	return r.db.Create(log).Error
+}

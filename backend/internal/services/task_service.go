@@ -1,6 +1,8 @@
 package services
 
 import (
+	"errors"
+
 	"github.com/taskify/backend/internal/models"
 	"github.com/taskify/backend/internal/repository"
 )
@@ -8,6 +10,7 @@ import (
 // TaskService 任务服务
 type TaskService struct {
 	taskRepo       *repository.TaskRepository
+	userRepo       *repository.UserRepository
 	membershipRepo *repository.MembershipRepository
 }
 
@@ -15,6 +18,7 @@ type TaskService struct {
 func NewTaskService() *TaskService {
 	return &TaskService{
 		taskRepo:       repository.NewTaskRepository(),
+		userRepo:       repository.NewUserRepository(),
 		membershipRepo: repository.NewMembershipRepository(),
 	}
 }
@@ -30,6 +34,15 @@ func (s *TaskService) CheckProjectAccess(userID, projectID uint) (bool, error) {
 	return s.membershipRepo.IsMember(userID, projectID)
 }
 
+// ValidateAssignee 验证负责人是否存在
+func (s *TaskService) ValidateAssignee(assigneeID uint) error {
+	_, err := s.userRepo.FindByID(assigneeID)
+	if err != nil {
+		return errors.New("指定的负责人不存在")
+	}
+	return nil
+}
+
 // GetTasksByProject 获取项目的所有任务
 func (s *TaskService) GetTasksByProject(projectID uint, status string) ([]models.Task, error) {
 	return s.taskRepo.GetByProject(projectID, status)
@@ -42,6 +55,11 @@ func (s *TaskService) GetTask(taskID uint) (*models.Task, error) {
 
 // CreateTask 创建任务
 func (s *TaskService) CreateTask(projectID uint, title, description string, assigneeID uint) (*models.Task, error) {
+	// 验证负责人存在
+	if err := s.ValidateAssignee(assigneeID); err != nil {
+		return nil, err
+	}
+
 	// 获取该状态任务的最大position
 	maxPosition, err := s.taskRepo.GetMaxPosition(projectID, models.StatusTodo)
 	if err != nil {
@@ -78,6 +96,10 @@ func (s *TaskService) UpdateTask(taskID uint, title *string, description *string
 		task.Description = *description
 	}
 	if assigneeID != nil {
+		// 验证新负责人存在
+		if err := s.ValidateAssignee(*assigneeID); err != nil {
+			return nil, err
+		}
 		task.AssigneeID = *assigneeID
 	}
 

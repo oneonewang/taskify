@@ -6,7 +6,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/taskify/backend/internal/middleware"
 	"github.com/taskify/backend/internal/models"
-	"github.com/taskify/backend/internal/repository"
 	"github.com/taskify/backend/internal/services"
 	"github.com/taskify/backend/pkg/response"
 )
@@ -68,16 +67,9 @@ func (h *TaskHandler) CreateTask(c *gin.Context) {
 		return
 	}
 
-	// 验证用户存在
-	var assignee models.User
-	if result := repository.GetDB().First(&assignee, req.AssigneeID); result.Error != nil {
-		response.BadRequest(c, "指定的负责人不存在")
-		return
-	}
-
 	task, err := h.taskService.CreateTask(projectID, req.Title, req.Description, req.AssigneeID)
 	if err != nil {
-		response.InternalError(c, "创建任务失败")
+		response.BadRequest(c, err.Error())
 		return
 	}
 
@@ -116,18 +108,9 @@ func (h *TaskHandler) UpdateTask(c *gin.Context) {
 		return
 	}
 
-	if req.AssigneeID != nil {
-		// 验证新负责人存在
-		var assignee models.User
-		if result := repository.GetDB().First(&assignee, *req.AssigneeID); result.Error != nil {
-			response.BadRequest(c, "指定的负责人不存在")
-			return
-		}
-	}
-
 	updatedTask, err := h.taskService.UpdateTask(taskID, req.Title, req.Description, req.AssigneeID)
 	if err != nil {
-		response.InternalError(c, "更新任务失败")
+		response.BadRequest(c, err.Error())
 		return
 	}
 

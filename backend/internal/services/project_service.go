@@ -12,6 +12,7 @@ import (
 // ProjectService 项目服务
 type ProjectService struct {
 	projectRepo    *repository.ProjectRepository
+	userRepo       *repository.UserRepository
 	membershipRepo *repository.MembershipRepository
 }
 
@@ -19,8 +20,45 @@ type ProjectService struct {
 func NewProjectService() *ProjectService {
 	return &ProjectService{
 		projectRepo:    repository.NewProjectRepository(),
+		userRepo:       repository.NewUserRepository(),
 		membershipRepo: repository.NewMembershipRepository(),
 	}
+}
+
+// GetAllUsers 获取所有用户
+func (s *ProjectService) GetAllUsers() ([]models.User, error) {
+	return s.userRepo.GetAll()
+}
+
+// GetAllProjects 获取所有未归档的项目
+func (s *ProjectService) GetAllProjects() ([]models.Project, error) {
+	return s.projectRepo.GetAll()
+}
+
+// GetProjectWithTaskCounts 获取项目详情及任务统计
+func (s *ProjectService) GetProjectWithTaskCounts(projectID uint) (*models.Project, map[string]int64, error) {
+	project, err := s.projectRepo.FindByID(projectID)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	counts, err := s.projectRepo.GetTaskCounts(projectID)
+	if err != nil {
+		return project, nil, nil // 返回项目但忽略统计错误
+	}
+
+	return project, counts, nil
+}
+
+// CreateAuditLog 记录审计日志
+func (s *ProjectService) CreateAuditLog(userID uint, eventType, details, ipAddress string) {
+	auditLog := models.AuditLog{
+		UserID:    userID,
+		EventType: eventType,
+		Details:   details,
+		IPAddress: ipAddress,
+	}
+	s.projectRepo.CreateAuditLog(&auditLog)
 }
 
 // CreateProject 创建项目
@@ -122,11 +160,6 @@ func (s *ProjectService) ArchiveProject(projectID uint, archive bool) (*models.P
 // GetProject 获取项目详情
 func (s *ProjectService) GetProject(projectID uint) (*models.Project, error) {
 	return s.projectRepo.FindByID(projectID)
-}
-
-// GetAllProjects 获取所有未归档的项目
-func (s *ProjectService) GetAllProjects() ([]models.Project, error) {
-	return s.projectRepo.GetAll()
 }
 
 // GetUserProjects 获取用户参与的项目列表
