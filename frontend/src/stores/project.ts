@@ -37,7 +37,7 @@ export const useProjectStore = defineStore('project', () => {
         getProjectTasks(projectId)
       ])
 
-      if (projectRes.success) {
+      if (projectRes.code === 0) {
         currentProject.value = {
           id: projectRes.data.id,
           name: projectRes.data.name,
@@ -46,11 +46,11 @@ export const useProjectStore = defineStore('project', () => {
         }
         taskCounts.value = projectRes.data.task_counts || { todo: 0, in_progress: 0, review: 0, done: 0 }
       } else {
-        error.value = projectRes.error?.message || '加载项目失败'
+        error.value = projectRes.message || '加载项目失败'
         return
       }
 
-      if (tasksRes.success) {
+      if (tasksRes.code === 0) {
         tasks.value = tasksRes.data
         // 更新任务数量
         taskCounts.value = {

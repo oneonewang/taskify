@@ -37,7 +37,7 @@ const loading = ref(true)
 onMounted(async () => {
   try {
     const res = await getUsers()
-    if (res.success) {
+    if (res.code === 0) {
       users.value = res.data
     }
   } catch (e) {

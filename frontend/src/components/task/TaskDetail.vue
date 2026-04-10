@@ -240,7 +240,7 @@ async function loadComments() {
   loading.value = true
   try {
     const res = await getComments(props.task.id)
-    if (res.success) {
+    if (res.code === 0) {
       comments.value = res.data
     }
   } catch (e) {
@@ -257,12 +257,12 @@ async function submitComment() {
   submitLoading.value = true
   try {
     const res = await createComment(props.task.id, newComment.value.trim())
-    if (res.success) {
+    if (res.code === 0) {
       comments.value.push(res.data)
       newComment.value = ''
       ElMessage.success('评论添加成功')
     } else {
-      ElMessage.error(res.error?.message || '添加评论失败')
+      ElMessage.error(res.message || '添加评论失败')
     }
   } catch (e: any) {
     ElMessage.error(e.message || '添加评论失败')
@@ -290,7 +290,7 @@ async function submitEdit(commentId: number) {
   editLoading.value = true
   try {
     const res = await updateComment(props.task.id, commentId, editContent.value.trim())
-    if (res.success) {
+    if (res.code === 0) {
       // 更新本地评论列表
       const index = comments.value.findIndex(c => c.id === commentId)
       if (index !== -1) {
@@ -299,7 +299,7 @@ async function submitEdit(commentId: number) {
       cancelEdit()
       ElMessage.success('评论已更新')
     } else {
-      ElMessage.error(res.error?.message || '更新评论失败')
+      ElMessage.error(res.message || '更新评论失败')
     }
   } catch (e: any) {
     ElMessage.error(e.message || '更新评论失败')
@@ -321,13 +321,13 @@ async function submitDelete() {
   deleteLoading.value = true
   try {
     const res = await deleteComment(props.task.id, commentToDelete.value.id)
-    if (res.success) {
+    if (res.code === 0) {
       comments.value = comments.value.filter(c => c.id !== commentToDelete.value!.id)
       deleteDialogVisible.value = false
       commentToDelete.value = null
       ElMessage.success('评论已删除')
     } else {
-      ElMessage.error(res.error?.message || '删除评论失败')
+      ElMessage.error(res.message || '删除评论失败')
     }
   } catch (e: any) {
     ElMessage.error(e.message || '删除评论失败')

@@ -84,7 +84,7 @@ onMounted(async () => {
     // 如果没有项目ID，先获取项目列表
     try {
       const res = await getProjects()
-      if (res.success && res.data.length > 0) {
+      if (res.code === 0 && res.data.length > 0) {
         router.replace(`/projects/${res.data[0].id}`)
       }
     } catch (e) {
@@ -124,10 +124,10 @@ async function onTaskMoved(taskId: number, newStatus: string, newPosition: numbe
       position: newPosition
     }
     const res = await updateTaskStatus(taskId, data)
-    if (!res.success) {
+    if (res.code !== 0) {
       // API 失败，回滚
       projectStore.updateTask(taskId, { status: oldStatus, position: oldPosition })
-      ElMessage.error(res.error?.message || '移动任务失败')
+      ElMessage.error(res.message || '移动任务失败')
     }
   } catch (e: any) {
     // 网络错误，回滚

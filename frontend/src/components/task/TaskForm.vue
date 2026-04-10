@@ -117,7 +117,7 @@ const rules: FormRules = {
 async function loadUsers() {
   try {
     const res = await getUsers()
-    if (res.success) {
+    if (res.code === 0) {
       users.value = res.data
     }
   } catch (e) {
@@ -174,12 +174,12 @@ async function handleSubmit() {
       }
 
       const res = await updateTask(props.task.id, updateData)
-      if (res.success) {
+      if (res.code === 0) {
         ElMessage.success('任务更新成功')
         emit('success', res.data)
         handleClose()
       } else {
-        ElMessage.error(res.error?.message || '更新任务失败')
+        ElMessage.error(res.message || '更新任务失败')
       }
     } else {
       // 创建任务
@@ -190,12 +190,12 @@ async function handleSubmit() {
       }
 
       const res = await createTask(props.projectId, createData)
-      if (res.success) {
+      if (res.code === 0) {
         ElMessage.success('任务创建成功')
         emit('success', res.data)
         handleClose()
       } else {
-        ElMessage.error(res.error?.message || '创建任务失败')
+        ElMessage.error(res.message || '创建任务失败')
       }
     }
   } catch (e: any) {

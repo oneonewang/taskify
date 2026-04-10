@@ -75,10 +75,10 @@ async function loadProjects() {
   error.value = null
   try {
     const res = await getProjects() as ApiResponse<Project[]>
-    if (res.success) {
+    if (res.code === 0) {
       projects.value = res.data
     } else {
-      error.value = res.error?.message || '加载失败'
+      error.value = res.message || '加载失败'
     }
   } catch (e: any) {
     error.value = e.message || '加载失败'

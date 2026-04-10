@@ -54,14 +54,9 @@ export interface CreateProjectRequest {
 }
 
 export interface ApiResponse<T> {
-  success: boolean
+  code: number
+  message: string
   data: T
-  message?: string
-  error?: {
-    code: string
-    message: string
-    details?: any
-  }
 }
 
 // 后端 API 响应格式 (code: 0 表示成功)

@@ -94,14 +94,14 @@ async function loadProject() {
   error.value = null
   try {
     const res = await getProject(projectId.value) as ApiResponse<Project>
-    if (res.success) {
+    if (res.code === 0) {
       project.value = res.data
       form.value = {
         name: res.data.name,
         description: res.data.description || ''
       }
     } else {
-      error.value = res.error?.message || '加载失败'
+      error.value = res.message || '加载失败'
     }
   } catch (e: any) {
     error.value = e.message || '加载失败'
@@ -123,10 +123,10 @@ async function handleUpdate() {
       name: form.value.name.trim(),
       description: form.value.description.trim()
     }) as ApiResponse<Project>
-    if (res.success) {
+    if (res.code === 0) {
       project.value = res.data
     } else {
-      error.value = res.error?.message || '保存失败'
+      error.value = res.message || '保存失败'
     }
   } catch (e: any) {
     error.value = e.message || '保存失败'
@@ -140,7 +140,7 @@ async function handleArchive() {
 
   try {
     const res = await archiveProject(projectId.value) as ApiResponse<Project>
-    if (res.success) {
+    if (res.code === 0) {
       project.value = res.data
     }
   } catch (e: any) {
@@ -153,10 +153,10 @@ async function handleDelete() {
 
   try {
     const res = await deleteProject(projectId.value) as ApiResponse<null>
-    if (res.success) {
+    if (res.code === 0) {
       router.push('/projects')
     } else {
-      error.value = res.error?.message || '删除失败'
+      error.value = res.message || '删除失败'
     }
   } catch (e: any) {
     error.value = e.message || '删除失败'

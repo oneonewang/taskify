@@ -85,10 +85,10 @@ async function handleSubmit() {
       description: form.value.description.trim()
     }) as ApiResponse<Project>
 
-    if (res.success) {
+    if (res.code === 0) {
       emit('success', res.data)
     } else {
-      error.value = res.error?.message || '创建失败'
+      error.value = res.message || '创建失败'
     }
   } catch (e: any) {
     error.value = e.message || '创建失败'
