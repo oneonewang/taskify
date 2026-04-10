@@ -1,4 +1,20 @@
 # Taskify 章程
+<!--
+  Sync Impact Report
+  ==================
+  Version change: 1.1.0 → 1.2.0
+  Modified principles: None (new principle added)
+  Added sections: VI. 分层设计 (Layered Architecture)
+  Removed sections: None
+  Templates requiring updates:
+    ✅ .specify/templates/plan-template.md - no changes needed (Constitution Check section is advisory)
+    ✅ .specify/templates/spec-template.md - no changes needed
+    ✅ .specify/templates/tasks-template.md - no changes needed
+    ⚠ .specify/templates/constitution-template.md - should be synced with new principle (manual)
+  Templates with no updates needed: agent-file-template.md, checklist-template.md
+  Follow-up TODOs: None
+-->
+
 <!-- 项目：Taskify - 安全优先的任务管理微服务应用 -->
 
 ## 核心原则
@@ -56,6 +72,18 @@
 - 自动生成的内容使用简体中文
 
 **理由**：确保团队所有成员（无论母语背景）都能理解和维护代码。
+
+### VI. 分层设计 (Layered Architecture)
+系统必须遵循分层架构，每一层只能调用其下层，禁止跨层调用。
+
+**规则**：
+- 表现层（Handler/Controller）只能调用业务逻辑层（Service）
+- 业务逻辑层（Service）只能调用数据访问层（Repository）
+- 数据访问层（Repository）只能访问数据库/存储
+- 下层禁止调用上层
+- 禁止跳过中间层直接调用
+
+**理由**：分层设计确保关注点分离，降低耦合度，提高可测试性和可维护性。直接跨层调用会破坏架构清晰性，导致代码难以理解和维护。
 
 ## 微服务约束 (Micervices Constraints)
 
@@ -121,4 +149,4 @@
 - 架构决策必须记录并说明与章程的一致性
 - 违反章程的决策必须明确记录原因
 
-**版本**: 1.1.0 | **批准日期**: 2026-04-08 | **最后修订**: 2026-04-08
+**版本**: 1.2.0 | **批准日期**: 2026-04-08 | **最后修订**: 2026-04-10
