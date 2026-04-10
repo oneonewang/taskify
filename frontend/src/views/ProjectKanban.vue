@@ -11,6 +11,7 @@
             :value="project.id"
           />
         </el-select>
+        <el-button @click="goToSettings">项目设置</el-button>
         <el-button @click="handleLogout">退出登录</el-button>
       </div>
     </div>
@@ -107,6 +108,10 @@ watch(() => route.params.id, async (newId) => {
 async function onProjectChange(projectId: number) {
   router.push(`/projects/${projectId}`)
   teamMembersRef.value?.loadMembers(projectId)
+}
+
+function goToSettings() {
+  router.push(`/projects/${selectedProjectId.value}/settings`)
 }
 
 // 任务移动处理
