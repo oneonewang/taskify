@@ -8,14 +8,14 @@
     <div v-if="task.description" class="task-description">
       {{ task.description.substring(0, 50) }}{{ task.description.length > 50 ? '...' : '' }}
     </div>
-    <div class="task-assignee">
+    <div v-if="task.assignee" class="task-assignee">
       <span
         class="assignee-avatar"
-        :style="{ backgroundColor: task.assignee.avatar }"
+        :style="{ backgroundColor: task.assignee.avatar || task.assignee.avatar_url || '#667eea' }"
       >
-        {{ task.assignee.name.charAt(0) }}
+        {{ (task.assignee.name || task.assignee.display_name || '?').charAt(0) }}
       </span>
-      <span class="assignee-name">{{ task.assignee.name }}</span>
+      <span class="assignee-name">{{ task.assignee.name || task.assignee.display_name }}</span>
     </div>
   </div>
 </template>

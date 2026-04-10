@@ -14,11 +14,11 @@
         <span class="assignee">
           <span
             class="assignee-avatar"
-            :style="{ backgroundColor: task.assignee.avatar }"
+            :style="{ backgroundColor: task.assignee?.avatar || task.assignee?.avatar_url || '#667eea' }"
           >
-            {{ task.assignee.name.charAt(0) }}
+            {{ (task.assignee?.name || task.assignee?.display_name || '?').charAt(0) }}
           </span>
-          {{ task.assignee.name }}
+          {{ task.assignee?.name || task.assignee?.display_name }}
         </span>
       </div>
       <div v-if="task.description" class="task-description">

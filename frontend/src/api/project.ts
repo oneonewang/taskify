@@ -11,8 +11,10 @@ const apiClient = axios.create({
 
 export interface Assignee {
   id: number
-  name: string
-  avatar: string
+  name?: string
+  display_name?: string
+  avatar?: string
+  avatar_url?: string
 }
 
 export interface Task {
