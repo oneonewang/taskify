@@ -136,6 +136,7 @@
 
 - [ ] T041 [US6] 改造 ProjectService (`backend/internal/services/project_service.go`) - CRUD、自动分配 Owner
 - [ ] T042 [US6] 改造 ProjectHandler (`backend/internal/handlers/project.go`) - POST /api/projects, PUT /api/projects/:id, DELETE /api/projects/:id, POST /api/projects/:id/archive
+  - **注意**: DELETE /api/projects/:id 必须 cascade 删除所有关联任务和评论
 - [ ] T043 [US6] 添加成员管理端点 - GET /api/projects/:id/members, POST /api/projects/:id/members, PUT /api/projects/:id/members/:user_id, DELETE /api/projects/:id/members/:user_id
 - [ ] T044 [US6] 添加权限检查 - 只有 Owner 可以管理成员、删除/归档项目
 - [ ] T045 [US6] 添加 AuditLog 记录 - 项目创建/删除/归档、成员变更
