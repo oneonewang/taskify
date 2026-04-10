@@ -72,7 +72,7 @@ import type { FormInstance, FormRules } from 'element-plus'
 import { ElMessage } from 'element-plus'
 import { createTask, updateTask, type CreateTaskRequest, type UpdateTaskRequest } from '../../api/task'
 import { getProjectMembers } from '../../api/membership'
-import type { Task, Assignee } from '../../api/project'
+import type { Task } from '../../api/project'
 import type { ProjectMember } from '../../api/membership'
 
 const props = defineProps<{

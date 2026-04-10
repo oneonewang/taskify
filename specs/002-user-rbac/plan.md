@@ -205,13 +205,15 @@ GET /api/admin/users?email=xxx&display_name=xxx&role=admin&is_disabled=false&pag
 - [x] Phase 2 完成 - 基础层（6个模型、中间件）
 - [x] Phase 3 完成 - US1 用户注册登录
 - [x] Phase 4 完成 - US2 用户资料管理
+- [x] Phase 4b 完成 - US2 个人资料前端
 - [x] Phase 5 完成 - US3 角色管理
 - [x] Phase 6 完成 - US4 权限配置
 - [x] Phase 7 完成 - US5 用户角色分配
 - [x] Phase 8 完成 - US6+US7 项目管理与成员
 - [x] Phase 9 完成 - US8 前端登录注册
+- [x] Phase 9b 完成 - US9b 批量导入用户
 - [x] Phase 10 完成 - US9 管理员用户管理
-- [ ] Phase 10b 待完成 - US9c 用户查询、重置密码、禁用
+- [x] Phase 10b 完成 - US9c 用户查询、重置密码、禁用
 - [x] Phase 11 完成 - US10 管理员角色权限
 - [x] Phase 12 完成 - US11+US12 项目管理前端+权限
 - [x] Phase 13 完成 - 改造现有 API

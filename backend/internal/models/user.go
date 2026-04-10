@@ -12,6 +12,7 @@ type User struct {
 	AvatarURL     string     `gorm:"size:500"`                       // 头像 URL
 	PasswordHash  string     `gorm:"size:255;not null"`             // bcrypt 哈希密码
 	EmailVerified bool       `gorm:"default:false"`                 // 邮箱已验证
+	IsDisabled    bool       `gorm:"default:false"`                 // 账号是否被禁用
 	LastLoginAt   *time.Time                                // 最近登录时间戳
 	CreatedAt     time.Time                                  // 创建时间戳
 	UpdatedAt     time.Time                                  // 更新时间戳
@@ -29,6 +30,7 @@ type UserResponse struct {
 	DisplayName   string    `json:"display_name"`
 	AvatarURL     string    `json:"avatar_url"`
 	EmailVerified bool      `json:"email_verified"`
+	IsDisabled    bool      `json:"is_disabled"`
 	LastLoginAt   *time.Time `json:"last_login_at,omitempty"`
 	CreatedAt     time.Time `json:"created_at"`
 }
@@ -41,6 +43,7 @@ func (u *User) ToResponse() UserResponse {
 		DisplayName:   u.DisplayName,
 		AvatarURL:     u.AvatarURL,
 		EmailVerified: u.EmailVerified,
+		IsDisabled:    u.IsDisabled,
 		LastLoginAt:   u.LastLoginAt,
 		CreatedAt:     u.CreatedAt,
 	}

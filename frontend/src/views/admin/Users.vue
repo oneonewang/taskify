@@ -2,6 +2,36 @@
   <div class="users-page">
     <div class="page-header">
       <h1>用户管理</h1>
+      <button @click="showImportDialog = true" class="btn btn-primary">批量导入</button>
+    </div>
+
+    <!-- 搜索筛选区域 -->
+    <div class="filter-bar">
+      <div class="filter-item">
+        <input
+          v-model="filters.email"
+          type="text"
+          placeholder="按邮箱搜索"
+          class="filter-input"
+        />
+      </div>
+      <div class="filter-item">
+        <input
+          v-model="filters.display_name"
+          type="text"
+          placeholder="按显示名称搜索"
+          class="filter-input"
+        />
+      </div>
+      <div class="filter-item">
+        <select v-model="filters.is_disabled" class="filter-select">
+          <option value="">全部状态</option>
+          <option value="false">已启用</option>
+          <option value="true">已禁用</option>
+        </select>
+      </div>
+      <button @click="searchUsers" class="btn btn-primary">搜索</button>
+      <button @click="resetFilters" class="btn btn-secondary">重置</button>
     </div>
 
     <div v-if="loading" class="loading">加载中...</div>
@@ -15,6 +45,7 @@
             <th>邮箱</th>
             <th>显示名称</th>
             <th>系统角色</th>
+            <th>状态</th>
             <th>操作</th>
           </tr>
         </thead>
@@ -30,11 +61,38 @@
               <span v-if="getUserSystemRoles(user.id).length === 0" class="no-role">无</span>
             </td>
             <td>
+              <span :class="['status-tag', user.is_disabled ? 'status-disabled' : 'status-active']">
+                {{ user.is_disabled ? '已禁用' : '正常' }}
+              </span>
+            </td>
+            <td class="action-cell">
               <button @click="openRoleDialog(user)" class="btn btn-sm">分配角色</button>
+              <button @click="handleResetPassword(user)" class="btn btn-sm btn-warning">重置密码</button>
+              <button v-if="!user.is_disabled" @click="handleDisableUser(user)" class="btn btn-sm btn-danger">禁用</button>
+              <button v-else @click="handleEnableUser(user)" class="btn btn-sm btn-success">启用</button>
             </td>
           </tr>
         </tbody>
       </table>
+
+      <!-- 分页控件 -->
+      <div class="pagination" v-if="totalPages > 0">
+        <button
+          @click="goToPage(currentPage - 1)"
+          :disabled="currentPage <= 1"
+          class="btn btn-sm"
+        >
+          上一页
+        </button>
+        <span class="page-info">第 {{ currentPage }} / {{ totalPages }} 页，共 {{ totalUsers }} 条</span>
+        <button
+          @click="goToPage(currentPage + 1)"
+          :disabled="currentPage >= totalPages"
+          class="btn btn-sm"
+        >
+          下一页
+        </button>
+      </div>
     </div>
 
     <!-- 分配角色对话框 -->
@@ -53,16 +111,28 @@
         </div>
       </div>
     </div>
+
+    <!-- 操作结果提示 -->
+    <div v-if="showToast" :class="['toast', toastType]">
+      {{ toastMessage }}
+    </div>
+
+    <!-- 批量导入对话框 -->
+    <ImportUsersDialog
+      :visible="showImportDialog"
+      @close="showImportDialog = false"
+      @success="loadData"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { getUsers as getUsersApi } from '../../api/user'
+import { getUsers as getUsersApi, resetUserPassword, disableUser, enableUser } from '../../api/user'
 import { getRoles } from '../../api/role'
 import { assignSystemRole as assignSystemRoleApi, getUserRoles as getUserRolesApi } from '../../api/membership'
-import type { ApiResponse } from '../../api/auth'
-import type { User } from '../../api/auth'
+import type { ApiResponse, User, UserListResponse } from '../../api/user'
+import ImportUsersDialog from '../../components/admin/ImportUsersDialog.vue'
 
 interface Role {
   id: number
@@ -83,6 +153,25 @@ const selectedUser = ref<User | null>(null)
 const selectedRoleId = ref<number | null>(null)
 
 const availableRoles = ref<Role[]>([])
+const showImportDialog = ref(false)
+
+// 分页相关
+const currentPage = ref(1)
+const pageSize = ref(20)
+const totalUsers = ref(0)
+const totalPages = ref(0)
+
+// 搜索筛选
+const filters = ref({
+  email: '',
+  display_name: '',
+  is_disabled: ''
+})
+
+// 提示消息
+const showToast = ref(false)
+const toastMessage = ref('')
+const toastType = ref('success')
 
 onMounted(async () => {
   await loadData()
@@ -93,18 +182,26 @@ async function loadData() {
   error.value = null
   try {
     const [usersRes, rolesRes] = await Promise.all([
-      getUsersApi() as Promise<ApiResponse<User[]>>,
+      getUsersApi({
+        email: filters.value.email || undefined,
+        display_name: filters.value.display_name || undefined,
+        is_disabled: filters.value.is_disabled || undefined,
+        page: currentPage.value,
+        page_size: pageSize.value
+      }) as Promise<ApiResponse<UserListResponse>>,
       getRoles() as Promise<ApiResponse<Role[]>>
     ])
 
     if (usersRes.code === 0) {
-      users.value = usersRes.data
+      users.value = usersRes.data.users
+      totalUsers.value = usersRes.data.total
+      totalPages.value = usersRes.data.total_pages
     } else {
       error.value = usersRes.message
     }
 
     if (rolesRes.code === 0) {
-      roles.value = rolesRes.data.filter(r => r.scope === 'system')
+      roles.value = rolesRes.data.filter((r: Role) => r.scope === 'system')
       availableRoles.value = roles.value
     }
 
@@ -120,6 +217,26 @@ async function loadData() {
   } finally {
     loading.value = false
   }
+}
+
+function searchUsers() {
+  currentPage.value = 1
+  loadData()
+}
+
+function resetFilters() {
+  filters.value = {
+    email: '',
+    display_name: '',
+    is_disabled: ''
+  }
+  searchUsers()
+}
+
+function goToPage(page: number) {
+  if (page < 1 || page > totalPages.value) return
+  currentPage.value = page
+  loadData()
 }
 
 function getUserSystemRoles(userId: number): string[] {
@@ -146,18 +263,75 @@ async function assignRole() {
     if (res.code === 0) {
       await loadData()
       closeRoleDialog()
+      showNotification('角色分配成功', 'success')
     } else {
-      error.value = res.message
+      showNotification(res.message, 'error')
     }
   } catch (e: any) {
-    error.value = e.response?.data?.message || '分配失败'
+    showNotification(e.response?.data?.message || '分配失败', 'error')
   }
+}
+
+async function handleResetPassword(user: User) {
+  if (!confirm(`确定要重置用户 ${user.email} 的密码吗？`)) return
+
+  try {
+    const res = await resetUserPassword(user.id) as ApiResponse<null>
+    if (res.code === 0) {
+      showNotification(`密码已重置为: ${res.message.replace('密码已重置为: ', '')}`, 'success')
+    } else {
+      showNotification(res.message, 'error')
+    }
+  } catch (e: any) {
+    showNotification(e.response?.data?.message || '重置密码失败', 'error')
+  }
+}
+
+async function handleDisableUser(user: User) {
+  if (!confirm(`确定要禁用用户 ${user.email} 吗？`)) return
+
+  try {
+    const res = await disableUser(user.id) as ApiResponse<null>
+    if (res.code === 0) {
+      showNotification('用户已禁用', 'success')
+      await loadData()
+    } else {
+      showNotification(res.message, 'error')
+    }
+  } catch (e: any) {
+    showNotification(e.response?.data?.message || '禁用用户失败', 'error')
+  }
+}
+
+async function handleEnableUser(user: User) {
+  if (!confirm(`确定要启用用户 ${user.email} 吗？`)) return
+
+  try {
+    const res = await enableUser(user.id) as ApiResponse<null>
+    if (res.code === 0) {
+      showNotification('用户已启用', 'success')
+      await loadData()
+    } else {
+      showNotification(res.message, 'error')
+    }
+  } catch (e: any) {
+    showNotification(e.response?.data?.message || '启用用户失败', 'error')
+  }
+}
+
+function showNotification(message: string, type: 'success' | 'error') {
+  toastMessage.value = message
+  toastType.value = type
+  showToast.value = true
+  setTimeout(() => {
+    showToast.value = false
+  }, 3000)
 }
 </script>
 
 <style scoped>
 .users-page {
-  max-width: 1200px;
+  max-width: 1400px;
 }
 
 .page-header {
@@ -170,7 +344,34 @@ async function assignRole() {
   color: #333;
 }
 
-.loading, .error {
+.filter-bar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.filter-item {
+  flex: 0 0 auto;
+}
+
+.filter-input,
+.filter-select {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  min-width: 150px;
+}
+
+.filter-input:focus,
+.filter-select:focus {
+  outline: none;
+  border-color: #1976d2;
+}
+
+.loading,
+.error {
   padding: 40px;
   text-align: center;
 }
@@ -205,7 +406,7 @@ async function assignRole() {
 }
 
 .users-table tbody tr:hover {
-  background: #f8f9fa;
+  background: #f5f5f5;
 }
 
 .role-tag {
@@ -223,6 +424,27 @@ async function assignRole() {
   font-size: 12px;
 }
 
+.status-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.status-active {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.status-disabled {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.action-cell {
+  white-space: nowrap;
+}
+
 .btn {
   padding: 6px 12px;
   border: none;
@@ -234,6 +456,7 @@ async function assignRole() {
 .btn-sm {
   padding: 4px 8px;
   font-size: 12px;
+  margin-right: 4px;
 }
 
 .btn-primary {
@@ -243,6 +466,21 @@ async function assignRole() {
 
 .btn-secondary {
   background: #6c757d;
+  color: #fff;
+}
+
+.btn-warning {
+  background: #ff9800;
+  color: #fff;
+}
+
+.btn-danger {
+  background: #dc3545;
+  color: #fff;
+}
+
+.btn-success {
+  background: #28a745;
   color: #fff;
 }
 
@@ -296,5 +534,50 @@ async function assignRole() {
   justify-content: flex-end;
   gap: 8px;
   margin-top: 16px;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 16px;
+  border-top: 1px solid #eee;
+}
+
+.page-info {
+  color: #666;
+  font-size: 14px;
+}
+
+.toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  padding: 12px 24px;
+  border-radius: 4px;
+  color: #fff;
+  font-size: 14px;
+  z-index: 2000;
+  animation: fadeIn 0.3s ease;
+}
+
+.toast.success {
+  background: #28a745;
+}
+
+.toast.error {
+  background: #dc3545;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 </style>

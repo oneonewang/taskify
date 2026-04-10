@@ -32,7 +32,6 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
 import { getPermissions, type Permission } from '../../api/role'
 
 const props = defineProps<{

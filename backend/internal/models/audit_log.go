@@ -44,11 +44,15 @@ func (a *AuditLog) ToResponse() AuditLogResponse {
 
 // 审计日志事件类型
 const (
-	EventLogin            = "login"             // 用户登录
-	EventLogout          = "logout"            // 用户登出
+	EventLogin            = "login"              // 用户登录
+	EventLogout          = "logout"             // 用户登出
 	EventPermissionChange = "permission_change" // 权限变更
-	EventAccessDenied    = "access_denied"     // 访问被拒绝
-	EventProjectCreated  = "project_created"   // 项目创建
-	EventProjectDeleted  = "project_deleted"   // 项目删除
-	EventProjectArchived  = "project_archived"  // 项目归档
+	EventAccessDenied    = "access_denied"      // 访问被拒绝
+	EventProjectCreated  = "project_created"    // 项目创建
+	EventProjectDeleted  = "project_deleted"    // 项目删除
+	EventProjectArchived = "project_archived"   // 项目归档
+	EventPasswordReset   = "password_reset"    // 密码重置
+	EventUserDisabled    = "user_disabled"      // 用户禁用
+	EventUserEnabled     = "user_enabled"      // 用户启用
+	EventUserImport     = "user_import"       // 用户批量导入
 )

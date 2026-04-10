@@ -94,7 +94,6 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
 import { getAuditLogs, EVENT_TYPES, type AuditLog, type AuditLogQuery } from '../../api/audit'
 
 const logs = ref<AuditLog[]>([])

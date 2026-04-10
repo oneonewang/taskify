@@ -90,6 +90,11 @@ func (s *AuthService) Login(req *LoginRequest, ipAddress string) (*AuthResponse,
 		return nil, errors.New("邮箱或密码错误")
 	}
 
+	// 检查用户是否被禁用
+	if user.IsDisabled {
+		return nil, errors.New("账户已被禁用")
+	}
+
 	// 验证密码
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password)); err != nil {
 		return nil, errors.New("邮箱或密码错误")

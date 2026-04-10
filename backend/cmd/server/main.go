@@ -78,7 +78,13 @@ func registerRoutes(r *gin.Engine, projectHandler *handlers.ProjectHandler, task
 		adminRequired.Use(middleware.AuthRequired(), middleware.RequireAdmin())
 		{
 			// 管理员用户管理
-			adminRequired.GET("/users", projectHandler.GetUsers)
+			adminUserHandler := handlers.NewAdminUserHandler()
+			adminRequired.GET("/users", adminUserHandler.ListUsers)
+			adminRequired.POST("/users/:id/reset-password", adminUserHandler.ResetPassword)
+			adminRequired.POST("/users/:id/disable", adminUserHandler.DisableUser)
+			adminRequired.POST("/users/:id/enable", adminUserHandler.EnableUser)
+			adminRequired.POST("/users/import", adminUserHandler.ImportUsers)
+			adminRequired.GET("/users/import/template", adminUserHandler.GetImportTemplate)
 			// 角色管理
 			adminRequired.GET("/roles", roleHandler.GetRoles)
 			adminRequired.GET("/roles/:id", roleHandler.GetRole)

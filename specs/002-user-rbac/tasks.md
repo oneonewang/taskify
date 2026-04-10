@@ -87,9 +87,9 @@
 
 **独立测试**: 登录后访问 /profile，修改资料验证变更
 
-- [ ] T026 [US2] 创建个人资料页面 (`frontend/src/views/Profile.vue`)
-- [ ] T027 [US2] 添加个人资料路由 - `/profile`
-- [ ] T028 [US2] 添加路由守卫 - 已登录用户才能访问
+- [x] T026 [US2] 创建个人资料页面 (`frontend/src/views/Profile.vue`)
+- [x] T027 [US2] 添加个人资料路由 - `/profile`
+- [x] T028 [US2] 添加路由守卫 - 已登录用户才能访问
 
 **检查点**: US2 前端完成 - 用户可以通过前端管理个人资料
 
@@ -200,14 +200,14 @@
 
 **独立测试**: 上传 Excel 文件，验证导入结果（成功数量、失败报告）
 
-- [ ] T093 [US9b] 添加批量导入接口 - POST /api/admin/users/import，解析 .xlsx 文件
-- [ ] T094 [US9b] 添加导入模板下载接口 - GET /api/admin/users/import/template
-- [ ] T095 [US9b] 实现 Excel 解析 - 读取邮箱、显示名称、角色字段
-- [ ] T096 [US9b] 实现批量创建逻辑 - 统一默认密码（admin123），跳过已存在邮箱
-- [ ] T097 [US9b] 添加 AuditLog 记录 - 批量导入事件
-- [ ] T098 [US9b] 创建批量导入组件 (`frontend/src/components/admin/ImportUsersDialog.vue`)
-- [ ] T099 [US9b] 在用户管理页面添加"批量导入"按钮 (`frontend/src/views/admin/Users.vue`)
-- [ ] T100 [US9b] 添加导入结果展示组件
+- [x] T093 [US9b] 添加批量导入接口 - POST /api/admin/users/import，解析 .xlsx 文件
+- [x] T094 [US9b] 添加导入模板下载接口 - GET /api/admin/users/import/template
+- [x] T095 [US9b] 实现 Excel 解析 - 读取邮箱、显示名称、角色字段
+- [x] T096 [US9b] 实现批量创建逻辑 - 统一默认密码（admin123），跳过已存在邮箱
+- [x] T097 [US9b] 添加 AuditLog 记录 - 批量导入事件
+- [x] T098 [US9b] 创建批量导入组件 (`frontend/src/components/admin/ImportUsersDialog.vue`)
+- [x] T099 [US9b] 在用户管理页面添加"批量导入"按钮 (`frontend/src/views/admin/Users.vue`)
+- [x] T100 [US9b] 添加导入结果展示组件
 
 **检查点**: US9b 完成 - 管理员可以批量导入用户
 
@@ -219,14 +219,14 @@
 
 **独立测试**: 在用户管理页面完成搜索、重置密码、禁用/启用操作
 
-- [ ] T098 [US9c] 添加用户查询接口 - GET /api/admin/users，支持邮箱、显示名称、角色、状态筛选，分页
-- [ ] T099 [US9c] 添加重置密码接口 - POST /api/admin/users/:id/reset-password
-- [ ] T100 [US9c] 添加禁用用户接口 - POST /api/admin/users/:id/disable
-- [ ] T101 [US9c] 添加启用用户接口 - POST /api/admin/users/:id/enable
-- [ ] T102 [US9c] [P] 更新 UserRepository - 添加按条件查询方法（含 is_disabled 筛选）
-- [ ] T103 [US9c] 改造用户管理页面 - 添加搜索筛选和分页功能 (`frontend/src/views/admin/Users.vue`)
-- [ ] T104 [US9c] 改造用户管理页面 - 添加重置密码、禁用、启用按钮
-- [ ] T105 [US9c] 添加 AuditLog 记录 - 密码重置、账号禁用/启用
+- [x] T098 [US9c] 添加用户查询接口 - GET /api/admin/users，支持邮箱、显示名称、角色、状态筛选，分页
+- [x] T099 [US9c] 添加重置密码接口 - POST /api/admin/users/:id/reset-password
+- [x] T100 [US9c] 添加禁用用户接口 - POST /api/admin/users/:id/disable
+- [x] T101 [US9c] 添加启用用户接口 - POST /api/admin/users/:id/enable
+- [x] T102 [US9c] [P] 更新 UserRepository - 添加按条件查询方法（含 is_disabled 筛选）
+- [x] T103 [US9c] 改造用户管理页面 - 添加搜索筛选和分页功能 (`frontend/src/views/admin/Users.vue`)
+- [x] T104 [US9c] 改造用户管理页面 - 添加重置密码、禁用、启用按钮
+- [x] T105 [US9c] 添加 AuditLog 记录 - 密码重置、账号禁用/启用
 
 **检查点**: US9c 完成 - 管理员可以查询用户、重置密码和禁用账号
 
@@ -243,7 +243,7 @@
 - [x] T060 [US10] 扩展 role API (`frontend/src/api/role.ts`)
 - [x] T061 [US10] 添加路由 - `/admin/roles`
 - [x] T062 [US10] 创建审计日志查看 (`frontend/src/views/admin/AuditLogs.vue`)
-- [ ] T062b [US10] 添加审计日志路由 - `/admin/audit-logs`
+- [x] T062b [US10] 添加审计日志路由 - `/admin/audit-logs`
 
 **检查点**: US10 完成 - 管理员可以前端配置角色权限
 
@@ -369,17 +369,19 @@
 
 ## 检查点清单
 
-- [ ] Phase 1 完成
-- [ ] Phase 2 完成 - 6 个模型、中间件就绪
-- [ ] US1 完成 - 后端注册/登录/登出
-- [ ] US2 完成 - 用户资料
-- [ ] US3 完成 - 角色 CRUD
-- [ ] US4 完成 - 权限配置
-- [ ] US5 完成 - 用户角色分配
-- [ ] US6+US7 完成 - 项目管理+成员
-- [ ] US8 完成 - 前端登录注册
-- [ ] US9 完成 - 管理员用户管理
-- [ ] US10 完成 - 管理员角色权限
-- [ ] US11+US12 完成 - 项目管理前端+按钮权限
-- [ ] Phase 13 完成 - 现有 API 添加权限
-- [ ] Phase 14 完成 - 文档完善
+- [x] Phase 1 完成
+- [x] Phase 2 完成 - 6 个模型、中间件就绪
+- [x] US1 完成 - 后端注册/登录/登出
+- [x] US2 完成 - 用户资料（含前端）
+- [x] US3 完成 - 角色 CRUD
+- [x] US4 完成 - 权限配置
+- [x] US5 完成 - 用户角色分配
+- [x] US6+US7 完成 - 项目管理+成员
+- [x] US8 完成 - 前端登录注册
+- [x] US9 完成 - 管理员用户管理
+- [x] US9b 完成 - 批量导入用户
+- [x] US9c 完成 - 用户查询、重置密码、禁用
+- [x] US10 完成 - 管理员角色权限
+- [x] US11+US12 完成 - 项目管理前端+按钮权限
+- [x] Phase 13 完成 - 现有 API 添加权限
+- [x] Phase 14 完成 - 文档完善

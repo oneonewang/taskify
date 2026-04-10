@@ -51,3 +51,72 @@ func (r *UserRepository) GetAll() ([]models.User, error) {
 	err := r.db.Find(&users).Error
 	return users, err
 }
+
+// UserFilter 用户查询过滤条件
+type UserFilter struct {
+	Email      string // 邮箱精确匹配
+	DisplayName string // 显示名称模糊匹配
+	IsDisabled *bool  // 禁用状态筛选
+	Page       int    // 页码（从1开始）
+	PageSize   int    // 每页数量
+}
+
+// PaginatedUsers 分页用户结果
+type PaginatedUsers struct {
+	Users      []models.User `json:"users"`
+	Total      int64         `json:"total"`
+	Page       int           `json:"page"`
+	PageSize   int           `json:"page_size"`
+	TotalPages int           `json:"total_pages"`
+}
+
+// FindUsers 分页查询用户
+func (r *UserRepository) FindUsers(filter UserFilter) (*PaginatedUsers, error) {
+	var users []models.User
+	var total int64
+
+	query := r.db.Model(&models.User{})
+
+	// 应用过滤条件
+	if filter.Email != "" {
+		query = query.Where("email = ?", filter.Email)
+	}
+	if filter.DisplayName != "" {
+		query = query.Where("display_name LIKE ?", "%"+filter.DisplayName+"%")
+	}
+	if filter.IsDisabled != nil {
+		query = query.Where("is_disabled = ?", *filter.IsDisabled)
+	}
+
+	// 统计总数
+	if err := query.Count(&total).Error; err != nil {
+		return nil, err
+	}
+
+	// 分页
+	if filter.Page < 1 {
+		filter.Page = 1
+	}
+	if filter.PageSize < 1 {
+		filter.PageSize = 20
+	}
+	offset := (filter.Page - 1) * filter.PageSize
+
+	// 查询数据
+	if err := query.Offset(offset).Limit(filter.PageSize).Order("id DESC").Find(&users).Error; err != nil {
+		return nil, err
+	}
+
+	totalPages := int(total) / filter.PageSize
+	if int(total)%filter.PageSize > 0 {
+		totalPages++
+	}
+
+	return &PaginatedUsers{
+		Users:      users,
+		Total:      total,
+		Page:       filter.Page,
+		PageSize:   filter.PageSize,
+		TotalPages: totalPages,
+	}, nil
+}
