@@ -8,8 +8,8 @@ import (
 type Comment struct {
 	ID        uint      `json:"id" gorm:"primaryKey;autoIncrement"`
 	Content   string    `json:"content" gorm:"type:varchar(2000);not null"`
-	UserID    uint      `json:"user_id" gorm:"index;not null"`   // 用户ID
-	TaskID    uint      `json:"task_id" gorm:"index;not null"`   // 任务ID
+	UserID    uint      `json:"user_id" gorm:"index"`     // 用户ID
+	TaskID    uint      `json:"task_id" gorm:"index"`     // 任务ID
 	CreatedAt time.Time `json:"created_at" gorm:"autoCreateTime"`
 	UpdatedAt time.Time `json:"updated_at" gorm:"autoUpdateTime"`
 

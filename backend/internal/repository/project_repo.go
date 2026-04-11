@@ -152,7 +152,7 @@ func (r *ProjectRepository) ListProjects(filter ProjectFilter) (*PaginatedProjec
 
 	// 分页查询
 	offset := (filter.Page - 1) * filter.PageSize
-	if err := query.Order("created_at DESC").Offset(offset).Limit(filter.PageSize).Find(&projects).Error; err != nil {
+	if err := query.Order("projects.created_at DESC").Offset(offset).Limit(filter.PageSize).Find(&projects).Error; err != nil {
 		return nil, err
 	}
 
