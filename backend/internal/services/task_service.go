@@ -95,19 +95,23 @@ func (s *TaskService) UpdateTask(taskID uint, title *string, description *string
 	if description != nil {
 		task.Description = *description
 	}
-	if assigneeID != nil {
+	if assigneeID != nil && *assigneeID != task.AssigneeID {
 		// 验证新负责人存在
 		if err := s.ValidateAssignee(*assigneeID); err != nil {
 			return nil, err
 		}
 		task.AssigneeID = *assigneeID
+		// 更新预加载的 Assignee 以便返回正确数据
+		if task.Assignee != nil {
+			task.Assignee.ID = *assigneeID
+		}
 	}
 
 	if err := s.taskRepo.Update(task); err != nil {
 		return nil, err
 	}
 
-	return s.taskRepo.FindByID(task.ID)
+	return task, nil
 }
 
 // UpdateTaskStatus 更新任务状态

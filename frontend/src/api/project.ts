@@ -32,7 +32,6 @@ export interface Task {
 export interface TaskCount {
   todo: number
   in_progress: number
-  review: number
   done: number
 }
 

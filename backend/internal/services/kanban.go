@@ -32,7 +32,6 @@ func (s *KanbanService) GetProjectTasks(projectID uint) (map[string][]models.Tas
 	tasksByStatus := map[string][]models.TaskResponse{
 		"todo":        {},
 		"in_progress": {},
-		"review":      {},
 		"done":        {},
 	}
 

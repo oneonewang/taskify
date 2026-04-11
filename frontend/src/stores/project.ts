@@ -13,14 +13,13 @@ export interface ProjectState {
 export const useProjectStore = defineStore('project', () => {
   const currentProject = ref<ProjectState | null>(null)
   const tasks = ref<Task[]>([])
-  const taskCounts = ref<TaskCount>({ todo: 0, in_progress: 0, review: 0, done: 0 })
+  const taskCounts = ref<TaskCount>({ todo: 0, in_progress: 0, done: 0 })
   const loading = ref(false)
   const error = ref('')
 
   const columns = [
     { status: 'todo', name: '待办' },
     { status: 'in_progress', name: '进行中' },
-    { status: 'review', name: '审核中' },
     { status: 'done', name: '已完成' }
   ]
 
@@ -46,7 +45,7 @@ export const useProjectStore = defineStore('project', () => {
           created_at: projectRes.data.created_at,
           owner_id: projectRes.data.owner_id
         }
-        taskCounts.value = projectRes.data.task_counts || { todo: 0, in_progress: 0, review: 0, done: 0 }
+        taskCounts.value = projectRes.data.task_counts || { todo: 0, in_progress: 0, done: 0 }
       } else {
         error.value = projectRes.message || '加载项目失败'
         return
@@ -58,7 +57,6 @@ export const useProjectStore = defineStore('project', () => {
         taskCounts.value = {
           todo: tasksRes.data.filter(t => t.status === 'todo').length,
           in_progress: tasksRes.data.filter(t => t.status === 'in_progress').length,
-          review: tasksRes.data.filter(t => t.status === 'review').length,
           done: tasksRes.data.filter(t => t.status === 'done').length
         }
       }
@@ -75,7 +73,6 @@ export const useProjectStore = defineStore('project', () => {
     taskCounts.value = {
       todo: newTasks.filter(t => t.status === 'todo').length,
       in_progress: newTasks.filter(t => t.status === 'in_progress').length,
-      review: newTasks.filter(t => t.status === 'review').length,
       done: newTasks.filter(t => t.status === 'done').length
     }
   }
@@ -88,7 +85,6 @@ export const useProjectStore = defineStore('project', () => {
       // 更新计数
       if (task.status === 'todo') taskCounts.value.todo++
       else if (task.status === 'in_progress') taskCounts.value.in_progress++
-      else if (task.status === 'review') taskCounts.value.review++
       else if (task.status === 'done') taskCounts.value.done++
     }
   }
@@ -114,7 +110,6 @@ export const useProjectStore = defineStore('project', () => {
       // 更新计数
       if (task.status === 'todo') taskCounts.value.todo--
       else if (task.status === 'in_progress') taskCounts.value.in_progress--
-      else if (task.status === 'review') taskCounts.value.review--
       else if (task.status === 'done') taskCounts.value.done--
       tasks.value = tasks.value.filter(t => t.id !== taskId)
     }

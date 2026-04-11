@@ -22,7 +22,8 @@ func (r *TaskRepository) Create(task *models.Task) error {
 
 // Update 更新任务
 func (r *TaskRepository) Update(task *models.Task) error {
-	return r.db.Save(task).Error
+	// 只更新任务本身字段，不保存关联的 Assignee 关系
+	return r.db.Model(task).Select("title", "description", "status", "position", "assignee_id", "updated_at").Updates(task).Error
 }
 
 // Delete 删除任务

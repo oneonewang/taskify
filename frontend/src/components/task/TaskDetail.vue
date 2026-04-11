@@ -8,7 +8,15 @@
     <template v-if="task">
     <!-- 任务基本信息 -->
     <div class="task-info">
-      <h2 class="task-title">{{ task.title }}</h2>
+      <div class="task-title-row">
+        <h2 class="task-title">
+          <span class="task-number">#{{ task.id }}</span>
+          {{ task.title }}
+        </h2>
+        <el-button v-if="canEdit" type="primary" text @click="showEditDialog = true">
+          编辑
+        </el-button>
+      </div>
       <div class="task-meta">
         <el-tag :type="statusType" size="small">{{ statusText }}</el-tag>
         <span class="assignee">
@@ -143,6 +151,14 @@
       </el-button>
     </template>
   </el-dialog>
+
+  <!-- 编辑任务对话框 -->
+  <TaskForm
+    v-model:visible="showEditDialog"
+    :task="task"
+    :project-id="task?.project_id || 0"
+    @success="onTaskUpdated"
+  />
 </template>
 
 <script setup lang="ts">
@@ -152,6 +168,8 @@ import type { Task } from '../../api/project'
 import { getComments, createComment, updateComment, deleteComment, type Comment } from '../../api/comment'
 import { useAuthStore } from '../../stores/auth'
 import { useSSE } from '../../composables/useSSE'
+import { usePermission } from '../../composables/usePermission'
+import TaskForm from './TaskForm.vue'
 
 const props = defineProps<{
   visible: boolean
@@ -160,9 +178,30 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:visible': [value: boolean]
+  'task-updated': [task: Task]
 }>()
 
 const authStore = useAuthStore()
+const permission = usePermission()
+
+// 编辑相关
+const showEditDialog = ref(false)
+const canEdit = ref(false)
+
+async function checkEditPermission() {
+  if (props.task?.project_id) {
+    canEdit.value = await permission.canEditTask(props.task.project_id)
+  } else {
+    canEdit.value = false
+  }
+}
+
+// 编辑成功后更新任务信息
+function onTaskUpdated(updatedTask: Task) {
+  emit('task-updated', updatedTask)
+  ElMessage.success('任务更新成功')
+  showEditDialog.value = false
+}
 
 // SSE 监听评论添加事件
 useSSE({
@@ -188,7 +227,6 @@ const dialogVisible = computed({
 const statusMap: Record<string, { text: string; type: string }> = {
   todo: { text: '待办', type: 'info' },
   in_progress: { text: '进行中', type: 'warning' },
-  review: { text: '审核中', type: 'primary' },
   done: { text: '已完成', type: 'success' }
 }
 
@@ -350,6 +388,7 @@ function handleClose() {
 watch(() => props.visible, (val) => {
   if (val) {
     loadComments()
+    checkEditPermission()
   }
 })
 </script>
@@ -363,7 +402,14 @@ watch(() => props.visible, (val) => {
   font-size: 20px;
   font-weight: 600;
   color: #333;
-  margin: 0 0 12px 0;
+  margin: 0;
+}
+
+.task-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
 }
 
 .task-meta {

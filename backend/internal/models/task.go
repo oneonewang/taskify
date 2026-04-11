@@ -10,7 +10,6 @@ type TaskStatus string
 const (
 	StatusTodo       TaskStatus = "todo"
 	StatusInProgress TaskStatus = "in_progress"
-	StatusReview     TaskStatus = "review"
 	StatusDone       TaskStatus = "done"
 )
 

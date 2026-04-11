@@ -169,10 +169,6 @@ function onTaskCreated(task: Task) {
   --column-accent: var(--color-primary);
 }
 
-.kanban-column.status-review {
-  --column-accent: var(--color-warning);
-}
-
 .kanban-column.status-done {
   --column-accent: var(--color-success);
 }

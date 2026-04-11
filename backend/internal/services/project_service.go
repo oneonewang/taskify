@@ -51,6 +51,7 @@ func (s *ProjectService) ListProjects(filter ProjectListFilter) (*repository.Pag
 		Keyword:    filter.Keyword,
 		IsArchived: filter.IsArchived,
 		OwnerName:  filter.OwnerName,
+		UserID:     filter.UserID,
 		Page:       filter.Page,
 		PageSize:   filter.PageSize,
 	}

@@ -80,6 +80,7 @@
     <TaskDetail
       v-model:visible="taskDetailVisible"
       :task="selectedTask"
+      @task-updated="onTaskUpdated"
     />
   </div>
 </template>
@@ -199,6 +200,10 @@ function onTasksUpdated(updatedTasks: Task[]) {
 function onTaskClick(task: Task) {
   selectedTask.value = task
   taskDetailVisible.value = true
+}
+
+function onTaskUpdated(updatedTask: Task) {
+  projectStore.updateTask(updatedTask.id, updatedTask)
 }
 </script>
 

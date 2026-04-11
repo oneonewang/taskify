@@ -9,7 +9,10 @@
     @click="$emit('click', task)"
   >
     <!-- Task Title -->
-    <div class="task-title">{{ task.title }}</div>
+    <div class="task-title">
+      <span class="task-number">#{{ task.id }}</span>
+      {{ task.title }}
+    </div>
 
     <!-- Task Description -->
     <div v-if="task.description" class="task-description">
@@ -131,6 +134,16 @@ function getInitials(assignee: Assignee | undefined): string {
   margin-bottom: var(--space-2);
   line-height: var(--line-height-tight);
   padding-right: var(--space-4);
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-1);
+}
+
+.task-number {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-muted);
+  flex-shrink: 0;
 }
 
 /* Task Description */

@@ -150,7 +150,7 @@ func (h *TaskHandler) UpdateTaskStatus(c *gin.Context) {
 	}
 
 	// 验证状态值
-	validStatuses := []models.TaskStatus{models.StatusTodo, models.StatusInProgress, models.StatusReview, models.StatusDone}
+	validStatuses := []models.TaskStatus{models.StatusTodo, models.StatusInProgress, models.StatusDone}
 	isValid := false
 	for _, s := range validStatuses {
 		if req.Status == s {
