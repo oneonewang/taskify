@@ -194,6 +194,7 @@ type AuditLog struct {
 | project_memberships | UNIQUE | (user_id, project_id) |
 | project_memberships | INDEX | user_id |
 | project_memberships | INDEX | project_id |
+| project_memberships | INDEX | (project_id, user_id, role_id) | <!-- 新增：优化 JOIN 查询 -->
 | audit_logs | INDEX | user_id |
 | audit_logs | INDEX | event_type |
 | audit_logs | INDEX | created_at |

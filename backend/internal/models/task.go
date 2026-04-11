@@ -18,10 +18,10 @@ type Task struct {
 	ID          uint      `json:"id" gorm:"primaryKey;autoIncrement"`
 	Title       string    `json:"title" gorm:"type:varchar(200);not null"`
 	Description string    `json:"description" gorm:"type:varchar(2000)"`
-	Status     TaskStatus `json:"status" gorm:"type:varchar(50);not null;default:'todo'"`
 	Position    int       `json:"position" gorm:"default:0"`
-	AssigneeID  uint      `json:"assignee_id" gorm:"not null"`
-	ProjectID   uint      `json:"project_id" gorm:"not null"`
+	AssigneeID  uint      `json:"assignee_id" gorm:"index"`                    // 负责人ID
+	ProjectID   uint      `json:"project_id" gorm:"index"`                   // 项目ID（复合索引在 sqlite.go 中创建）
+	Status      TaskStatus `json:"status" gorm:"type:varchar(50);not null;default:'todo';index"` // 状态（复合索引在 sqlite.go 中创建）
 	CreatedAt   time.Time `json:"created_at" gorm:"autoCreateTime"`
 	UpdatedAt   time.Time `json:"updated_at" gorm:"autoUpdateTime"`
 

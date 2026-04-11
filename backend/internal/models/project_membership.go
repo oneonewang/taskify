@@ -6,11 +6,11 @@ import (
 
 // ProjectMembership 项目成员资格
 type ProjectMembership struct {
-	ID        uint      `gorm:"primaryKey"`                     // 唯一标识符
-	UserID    uint      `gorm:"index"`                          // 用户ID
-	ProjectID uint      `gorm:"index"`                          // 项目ID
-	RoleID    uint      `gorm:"index"`                          // 角色ID
-	JoinedAt  time.Time                                      // 加入时间
+	ID        uint      `gorm:"primaryKey"`     // 唯一标识符
+	UserID    uint      `gorm:"index"`          // 用户ID
+	ProjectID uint      `gorm:"index"`           // 项目ID（复合索引在 sqlite.go 中创建）
+	RoleID    uint      `gorm:"index"`           // 角色ID（复合索引在 sqlite.go 中创建）
+	JoinedAt  time.Time                     // 加入时间
 }
 
 // TableName 指定表名

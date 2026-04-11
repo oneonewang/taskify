@@ -9,7 +9,7 @@ type Project struct {
 	ID          uint      `json:"id" gorm:"primaryKey;autoIncrement"`
 	Name        string    `json:"name" gorm:"type:varchar(100);not null"`
 	Description string    `json:"description" gorm:"type:varchar(500)"`
-	IsArchived  bool      `json:"is_archived" gorm:"default:false"` // 是否已归档
+	IsArchived  bool      `json:"is_archived" gorm:"default:false;index"` // 是否已归档
 	CreatedAt   time.Time `json:"created_at" gorm:"autoCreateTime"`
 	UpdatedAt   time.Time `json:"updated_at" gorm:"autoUpdateTime"`
 }

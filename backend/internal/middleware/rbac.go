@@ -49,12 +49,6 @@ func RequireProjectMember() gin.HandlerFunc {
 			return
 		}
 
-		// 检查用户是否是系统管理员
-		if isAdmin, err := checkIsAdmin(userID); err == nil && isAdmin {
-			c.Next()
-			return
-		}
-
 		// 从URL参数获取项目ID
 		projectIDStr := c.Param("id")
 		projectID, err := strconv.ParseUint(projectIDStr, 10, 64)
@@ -64,15 +58,21 @@ func RequireProjectMember() gin.HandlerFunc {
 			return
 		}
 
-		// 检查用户是否是项目成员
+		// 先检查是否是项目成员
 		isMember, err := checkIsProjectMember(uint(userID), uint(projectID))
-		if err != nil || !isMember {
-			response.Forbidden(c, "您不是该项目成员")
-			c.Abort()
+		if err == nil && isMember {
+			c.Next()
 			return
 		}
 
-		c.Next()
+		// 只有系统管理员可以绕过项目成员检查
+		if isAdmin, err := checkIsAdmin(userID); err == nil && isAdmin {
+			c.Next()
+			return
+		}
+
+		response.Forbidden(c, "您不是该项目成员")
+		c.Abort()
 	}
 }
 
@@ -86,12 +86,6 @@ func RequireProjectOwner() gin.HandlerFunc {
 			return
 		}
 
-		// 检查用户是否是系统管理员
-		if isAdmin, err := checkIsAdmin(userID); err == nil && isAdmin {
-			c.Next()
-			return
-		}
-
 		// 从URL参数获取项目ID
 		projectIDStr := c.Param("id")
 		projectID, err := strconv.ParseUint(projectIDStr, 10, 64)
@@ -101,15 +95,21 @@ func RequireProjectOwner() gin.HandlerFunc {
 			return
 		}
 
-		// 检查用户是否是项目所有者
+		// 先检查是否是项目所有者（管理员也是项目所有者，跳过此检查）
 		isOwner, err := checkIsProjectOwner(uint(userID), uint(projectID))
-		if err != nil || !isOwner {
-			response.Forbidden(c, "只有项目所有者才能执行此操作")
-			c.Abort()
+		if err == nil && isOwner {
+			c.Next()
 			return
 		}
 
-		c.Next()
+		// 只有系统管理员可以绕过项目所有者检查
+		if isAdmin, err := checkIsAdmin(userID); err == nil && isAdmin {
+			c.Next()
+			return
+		}
+
+		response.Forbidden(c, "只有项目所有者才能执行此操作")
+		c.Abort()
 	}
 }
 

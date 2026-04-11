@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"log"
 	"time"
 
 	"github.com/taskify/backend/internal/models"
@@ -97,12 +98,14 @@ func (r *MembershipRepository) GetUserMembershipsWithDetails(userID uint) ([]map
 // GetProjectMembershipsWithDetails 获取项目的成员资格详情
 func (r *MembershipRepository) GetProjectMembershipsWithDetails(projectID uint) ([]map[string]interface{}, error) {
 	var results []map[string]interface{}
+	log.Printf("[DEBUG] GetProjectMembershipsWithDetails query start, projectID=%d", projectID)
 	err := r.db.Table("project_memberships").
 		Select("project_memberships.*, users.email, users.display_name, users.avatar_url, roles.name as role_name, roles.display_name as role_display_name").
 		Joins("JOIN users ON project_memberships.user_id = users.id").
 		Joins("JOIN roles ON project_memberships.role_id = roles.id").
 		Where("project_memberships.project_id = ?", projectID).
 		Scan(&results).Error
+	log.Printf("[DEBUG] GetProjectMembershipsWithDetails query end, projectID=%d, count=%d, err=%v", projectID, len(results), err)
 	return results, err
 }
 

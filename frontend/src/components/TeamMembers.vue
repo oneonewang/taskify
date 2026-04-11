@@ -54,9 +54,11 @@ function loadMembers(projectId: number) {
   getProjectMembers(projectId).then(res => {
     if (res.code === 0 && res.data.members) {
       members.value = res.data.members
+      console.log('[DEBUG] TeamMembers loaded:', members.value.length, 'members')
     }
   }).catch(e => {
-    console.error('Failed to load members:', e)
+    console.error('[ERROR] Failed to load members:', e)
+    // 不阻塞流程，允许空列表显示
   }).finally(() => {
     loading.value = false
   })

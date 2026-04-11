@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"log"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -147,7 +148,9 @@ func (h *MembershipHandler) GetProjectMembers(c *gin.Context) {
 		return
 	}
 
+	log.Printf("[DEBUG] GetProjectMembers start, projectID=%d", id)
 	members, err := h.membershipService.GetProjectMembers(uint(id))
+	log.Printf("[DEBUG] GetProjectMembers end, projectID=%d, membersCount=%d, err=%v", id, len(members), err)
 	if err != nil {
 		response.InternalError(c, "获取项目成员失败")
 		return

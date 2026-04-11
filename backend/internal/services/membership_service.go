@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"log"
 
 	"github.com/taskify/backend/internal/models"
 	"github.com/taskify/backend/internal/repository"
@@ -152,6 +153,7 @@ func (s *MembershipService) GetUserMemberships(userID uint) (map[string]interfac
 
 // GetProjectMembers 获取项目的成员列表
 func (s *MembershipService) GetProjectMembers(projectID uint) ([]map[string]interface{}, error) {
+	log.Printf("[DEBUG] MembershipService.GetProjectMembers called, projectID=%d", projectID)
 	return s.membershipRepo.GetProjectMembershipsWithDetails(projectID)
 }
 

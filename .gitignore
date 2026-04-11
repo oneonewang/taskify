@@ -21,3 +21,4 @@ Thumbs.db
 .claude/settings.json
 **/__debug_bin*
 **/taskify.db
+backend/main

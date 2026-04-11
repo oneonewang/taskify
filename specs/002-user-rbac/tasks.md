@@ -397,7 +397,19 @@
 | Phase 13 | 5 | 改造现有 API |
 | Phase 14 | 6 | 收尾 |
 | Phase 15 (US13) | 6 | 项目列表增强（分页/过滤/所有者显示） |
-| **总计** | **109** | |
+| **总计** | **112** | |
+
+---
+
+## Phase 17: 数据库优化 (优先级: P2)
+
+**目标**: 优化查询性能，减少不必要数据库操作
+
+- [x] T118 [P] 添加复合索引 `idx_project_memberships_project_user_role` 优化成员查询
+- [x] T119 [P] 优化 RequireProjectMember/RequireProjectOwner 中间件减少冗余查询
+- [ ] T120 [P] 添加慢查询日志监控基准 (可选)
+
+**检查点**: Phase 17 完成 - 数据库查询性能优化
 
 ---
 
