@@ -22,7 +22,7 @@
         <div class="member-role">
           <span class="role-badge">{{ member.role_display_name }}</span>
         </div>
-        <div v-if="canManage" class="member-actions">
+        <div v-if="canManage && member.role_name !== 'owner'" class="member-actions">
           <button @click="openEditDialog(member)" class="btn btn-xs">编辑</button>
           <button @click="removeMember(member)" class="btn btn-xs btn-danger">移除</button>
         </div>
@@ -45,7 +45,7 @@
           <label>角色</label>
           <select v-model="addForm.roleId">
             <option value="">选择角色</option>
-            <option v-for="role in projectRoles" :key="role.id" :value="role.id">
+            <option v-for="role in addableRoles" :key="role.id" :value="role.id">
               {{ role.display_name }}
             </option>
           </select>
@@ -67,7 +67,7 @@
         <div class="form-group">
           <label>角色</label>
           <select v-model="editForm.roleId">
-            <option v-for="role in projectRoles" :key="role.id" :value="role.id">
+            <option v-for="role in editableRoles" :key="role.id" :value="role.id">
               {{ role.display_name }}
             </option>
           </select>
@@ -82,7 +82,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { getProjectMembers, addProjectMember, updateMemberRole, removeProjectMember } from '../../api/membership'
 import type { ApiResponse } from '../../api/membership'
 
@@ -108,6 +108,11 @@ const projectRoles = ref<{ id: number; name: string; display_name: string }[]>([
   { id: 4, name: 'member', display_name: '成员' },
   { id: 5, name: 'guest', display_name: '访客' }
 ])
+
+// 添加成员时排除所有者角色（单一所有者原则）
+const addableRoles = computed(() => projectRoles.value.filter(r => r.name !== 'owner'))
+// 编辑角色时保留所有角色（用于所有权转让）
+const editableRoles = computed(() => projectRoles.value)
 const loading = ref(false)
 const error = ref<string | null>(null)
 const showAddDialog = ref(false)

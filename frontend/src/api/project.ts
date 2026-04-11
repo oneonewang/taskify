@@ -44,10 +44,21 @@ export interface Project {
   created_at: string
   task_counts?: TaskCount
   tasks?: Task[]
+  owner_id?: number
+  owner_name?: string
+  owner_avatar?: string
 }
 
 export interface ProjectDetail extends Project {
   task_counts: TaskCount
+}
+
+export interface PaginatedProjects {
+  projects: Project[]
+  total: number
+  page: number
+  page_size: number
+  total_pages: number
 }
 
 export interface CreateProjectRequest {
@@ -68,8 +79,15 @@ export interface BackendApiResponse<T> {
   data: T
 }
 
-export function getProjects(): Promise<ApiResponse<Project[]>> {
-  return apiClient.get('/projects').then(res => res.data)
+export function getProjects(params?: {
+  page?: number
+  page_size?: number
+  keyword?: string
+  owner_name?: string
+  is_archived?: boolean
+  my?: string
+}): Promise<ApiResponse<PaginatedProjects>> {
+  return apiClient.get('/projects', { params }).then(res => res.data)
 }
 
 export function getMyProjects(): Promise<ApiResponse<Project[]>> {

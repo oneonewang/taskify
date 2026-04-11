@@ -1,6 +1,10 @@
 <template>
   <div id="app">
-    <router-view />
+    <router-view v-slot="{ Component }">
+      <div class="page-wrapper">
+        <component :is="Component" />
+      </div>
+    </router-view>
     <AppBottom />
   </div>
 </template>
@@ -27,12 +31,18 @@ html, body, #app {
 /* Prevent FOUC */
 #app {
   opacity: 1;
+  display: flex;
+  flex-direction: column;
 }
 
-/* Add padding-bottom to main content to account for bottom nav on mobile */
-@media (max-width: 768px) {
-  body {
-    padding-bottom: 64px;
+.page-wrapper {
+  flex: 1;
+  padding-bottom: 70px;
+}
+
+@media (min-width: 769px) {
+  .page-wrapper {
+    padding-bottom: 60px;
   }
 }
 </style>

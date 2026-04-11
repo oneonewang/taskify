@@ -9,6 +9,16 @@ import (
 	"gorm.io/gorm"
 )
 
+// ProjectListFilter 项目列表过滤条件
+type ProjectListFilter struct {
+	Keyword    string // 项目名称关键字（模糊搜索）
+	IsArchived *bool  // 是否归档（nil 表示不过滤）
+	OwnerName  string // 所有者名称（模糊搜索）
+	UserID     uint   // 用户ID（大于0时过滤该用户参与的项目）
+	Page       int    // 页码（从1开始）
+	PageSize   int    // 每页数量
+}
+
 // ProjectService 项目服务
 type ProjectService struct {
 	projectRepo    *repository.ProjectRepository
@@ -33,6 +43,18 @@ func (s *ProjectService) GetAllUsers() ([]models.User, error) {
 // GetAllProjects 获取所有未归档的项目
 func (s *ProjectService) GetAllProjects() ([]models.Project, error) {
 	return s.projectRepo.GetAll()
+}
+
+// ListProjects 分页获取项目列表（包含所有者信息）
+func (s *ProjectService) ListProjects(filter ProjectListFilter) (*repository.PaginatedProjects, error) {
+	repoFilter := repository.ProjectFilter{
+		Keyword:    filter.Keyword,
+		IsArchived: filter.IsArchived,
+		OwnerName:  filter.OwnerName,
+		Page:       filter.Page,
+		PageSize:   filter.PageSize,
+	}
+	return s.projectRepo.ListProjects(repoFilter)
 }
 
 // GetProjectWithTaskCounts 获取项目详情及任务统计

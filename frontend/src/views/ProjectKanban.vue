@@ -1,6 +1,6 @@
 <template>
   <div class="project-kanban">
-    <AppHeader>
+    <AppHeader :title="selectedProjectName">
       <template #center>
         <div class="project-selector" v-if="projects.length > 0">
           <el-select
@@ -25,6 +25,19 @@
             />
           </el-select>
         </div>
+      </template>
+      <template #actions>
+        <router-link
+          v-if="selectedProjectId && isOwner"
+          :to="`/projects/${selectedProjectId}/settings`"
+          class="settings-btn"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+          <span>项目设置</span>
+        </router-link>
       </template>
     </AppHeader>
 
@@ -102,6 +115,19 @@ const teamMembersRef = ref<InstanceType<typeof TeamMembers> | null>(null)
 
 const currentUserId = computed(() => authStore.user?.id ?? null)
 
+// Selected project name for header title
+const selectedProjectName = computed(() => {
+  if (!selectedProjectId.value) return ''
+  const project = projects.value.find(p => p.id === selectedProjectId.value)
+  return project?.name || projectStore.currentProject?.name || ''
+})
+
+// Check if current user is owner of selected project
+const isOwner = computed(() => {
+  if (!selectedProjectId.value || !currentUserId.value) return false
+  return projectStore.currentProject?.owner_id === currentUserId.value
+})
+
 // Get project ID from route
 const projectIdFromRoute = computed(() => Number(route.params.id))
 
@@ -113,8 +139,8 @@ onMounted(async () => {
   } else {
     try {
       const res = await getProjects()
-      if (res.code === 0 && res.data.length > 0) {
-        router.replace(`/projects/${res.data[0].id}`)
+      if (res.code === 0 && res.data.projects && res.data.projects.length > 0) {
+        router.replace(`/projects/${res.data.projects[0].id}`)
       }
     } catch (e) {
       console.error('Failed to load projects:', e)
@@ -264,6 +290,36 @@ function onTaskClick(task: Task) {
 
 .project-select :deep(.el-input.is-focus .el-input__wrapper) {
   box-shadow: 0 0 0 2px var(--color-primary-light) !important;
+}
+
+/* Settings Button */
+.settings-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  transition: all var(--transition-base);
+}
+
+.settings-btn:hover {
+  background: var(--color-bg-muted);
+  border-color: var(--color-border-hover);
+  color: var(--color-text-primary);
+}
+
+.settings-btn svg {
+  opacity: 0.7;
+}
+
+.settings-btn:hover svg {
+  opacity: 1;
 }
 
 /* Responsive */

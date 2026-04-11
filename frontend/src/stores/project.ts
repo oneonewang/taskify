@@ -7,6 +7,7 @@ export interface ProjectState {
   name: string
   description: string
   created_at: string
+  owner_id?: number
 }
 
 export const useProjectStore = defineStore('project', () => {
@@ -42,7 +43,8 @@ export const useProjectStore = defineStore('project', () => {
           id: projectRes.data.id,
           name: projectRes.data.name,
           description: projectRes.data.description,
-          created_at: projectRes.data.created_at
+          created_at: projectRes.data.created_at,
+          owner_id: projectRes.data.owner_id
         }
         taskCounts.value = projectRes.data.task_counts || { todo: 0, in_progress: 0, review: 0, done: 0 }
       } else {

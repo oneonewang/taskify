@@ -68,6 +68,28 @@
             <p>管理项目成员和权限</p>
           </div>
           <div class="section-body">
+            <!-- Owner Transfer -->
+            <div v-if="canManageMembers" class="owner-transfer">
+              <div class="owner-transfer-info">
+                <span class="owner-label">当前所有者：</span>
+                <span class="owner-name">{{ project?.owner_name || '未知' }}</span>
+              </div>
+              <div class="owner-transfer-form">
+                <select v-model="newOwnerId" class="form-select">
+                  <option :value="0">选择新所有者...</option>
+                  <option v-for="member in potentialOwners" :key="member.user_id" :value="member.user_id">
+                    {{ member.display_name }}
+                  </option>
+                </select>
+                <button
+                  class="btn btn-warning"
+                  :disabled="!newOwnerId || transferringOwner"
+                  @click="handleTransferOwnership"
+                >
+                  {{ transferringOwner ? '转让中...' : '转让所有权' }}
+                </button>
+              </div>
+            </div>
             <ProjectMembers :project-id="projectId" :can-manage="canManageMembers" />
           </div>
         </section>
@@ -124,8 +146,11 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { ElMessage } from 'element-plus'
 import { getProject, updateProject, archiveProject, deleteProject } from '../../api/project'
 import type { Project, ApiResponse } from '../../api/project'
+import { getProjectMembers, updateMemberRole } from '../../api/membership'
+import type { ApiResponse as MembershipApiResponse } from '../../api/membership'
 import ProjectMembers from '../../components/project/ProjectMembers.vue'
 import { usePermission } from '../../composables/usePermission'
 import AppHeader from '../../components/AppHeader.vue'
@@ -144,6 +169,11 @@ const error = ref<string | null>(null)
 const canDeleteProject = ref(false)
 const canManageMembers = ref(false)
 
+// 所有权转让
+const newOwnerId = ref(0)
+const transferringOwner = ref(false)
+const potentialOwners = ref<{ user_id: number; display_name: string }[]>([])
+
 async function checkPermissions() {
   const permission = usePermission()
   canDeleteProject.value = await permission.canDeleteProject(projectId.value)
@@ -153,6 +183,9 @@ async function checkPermissions() {
 onMounted(async () => {
   await loadProject()
   await checkPermissions()
+  if (canManageMembers.value) {
+    await loadPotentialOwners()
+  }
 })
 
 async function loadProject() {
@@ -195,6 +228,7 @@ async function handleUpdate() {
     }) as ApiResponse<Project>
     if (res.code === 0) {
       project.value = res.data
+      ElMessage.success('保存成功')
     } else {
       error.value = res.message || '保存失败'
     }
@@ -215,6 +249,62 @@ async function handleArchive() {
     }
   } catch (e: any) {
     error.value = e.message || '操作失败'
+  }
+}
+
+async function loadPotentialOwners() {
+  try {
+    const res = await getProjectMembers(projectId.value) as MembershipApiResponse<{ members: { user_id: number; display_name: string }[] }>
+    if (res.code === 0) {
+      // 排除当前所有者
+      potentialOwners.value = res.data.members.filter(m => m.user_id !== project.value?.owner_id)
+    }
+  } catch (e) {
+    console.error('加载成员失败', e)
+  }
+}
+
+async function handleTransferOwnership() {
+  if (!newOwnerId.value || !project.value) return
+
+  if (!confirm(`确定要将项目所有权转让给选中成员吗？`)) return
+
+  transferringOwner.value = true
+  try {
+    // 查找新所有者的角色ID
+    const res = await getProjectMembers(projectId.value) as MembershipApiResponse<{ members: { user_id: number; role_id: number }[] }>
+    if (res.code !== 0) {
+      ElMessage.error('获取成员信息失败')
+      return
+    }
+    const newOwnerMember = res.data.members.find(m => m.user_id === newOwnerId.value)
+    if (!newOwnerMember) {
+      ElMessage.error('未找到选中成员')
+      return
+    }
+
+    // 1. 将新所有者角色更新为 owner
+    const updateRes = await updateMemberRole(projectId.value, newOwnerId.value, 3) // 3 = owner role ID
+    if (updateRes.code !== 0) {
+      ElMessage.error(updateRes.message || '转让所有权失败')
+      return
+    }
+
+    // 2. 将原所有者降级为 member
+    if (project.value.owner_id) {
+      const oldOwnerRes = await updateMemberRole(projectId.value, project.value.owner_id, 4) // 4 = member role ID
+      if (oldOwnerRes.code !== 0) {
+        ElMessage.error('转让成功，但降级原所有者失败')
+      }
+    }
+
+    ElMessage.success('所有权转让成功')
+    newOwnerId.value = 0
+    await loadProject()
+  } catch (e: any) {
+    ElMessage.error(e.message || '转让所有权失败')
+  } finally {
+    transferringOwner.value = false
   }
 }
 
@@ -509,5 +599,65 @@ async function handleDelete() {
     width: 100%;
     justify-content: center;
   }
+}
+
+/* Owner Transfer */
+.owner-transfer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  background: var(--color-bg-muted);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-4);
+}
+
+.owner-transfer-info {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.owner-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.owner-name {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.owner-transfer-form {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex: 1;
+}
+
+.owner-transfer-form .form-select {
+  flex: 1;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+  background: var(--color-bg-surface);
+}
+
+.owner-transfer-form .btn-warning {
+  background: #f5a623;
+  color: white;
+  white-space: nowrap;
+}
+
+.owner-transfer-form .btn-warning:hover:not(:disabled) {
+  background: #e09612;
+}
+
+.owner-transfer-form .btn-warning:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 </style>

@@ -26,6 +26,9 @@ type ProjectResponse struct {
 	Description string    `json:"description"`
 	IsArchived  bool      `json:"is_archived"`
 	CreatedAt   time.Time `json:"created_at"`
+	OwnerID     uint      `json:"owner_id,omitempty"`
+	OwnerName   string    `json:"owner_name,omitempty"`
+	OwnerAvatar string    `json:"owner_avatar,omitempty"`
 }
 
 // ToResponse 转换为API响应格式

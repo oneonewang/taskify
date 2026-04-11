@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/taskify/backend/internal/middleware"
 	"github.com/taskify/backend/internal/models"
+	"github.com/taskify/backend/internal/repository"
 	"github.com/taskify/backend/internal/services"
 	"github.com/taskify/backend/pkg/response"
 )
@@ -51,21 +52,79 @@ func (h *ProjectHandler) GetUsers(c *gin.Context) {
 	response.Success(c, userResponses)
 }
 
-// GetProjects 获取所有项目
+// GetProjects 获取所有项目（支持分页和过滤）
+// 支持 my=true 参数获取当前用户参与的项目
 func (h *ProjectHandler) GetProjects(c *gin.Context) {
-	projects, err := h.projectService.GetAllProjects()
+	// 解析分页参数
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "20"))
+
+	// 解析过滤参数
+	keyword := c.Query("keyword")
+	ownerName := c.Query("owner_name")
+	isArchivedStr := c.Query("is_archived")
+
+	var isArchived *bool
+	if isArchivedStr != "" {
+		archived := isArchivedStr == "true"
+		isArchived = &archived
+	}
+
+	// 解析 my 参数
+	myStr := c.Query("my")
+	var userID uint
+	if myStr == "true" {
+		uid, ok := middleware.GetUserID(c)
+		if !ok {
+			response.Unauthorized(c, "请先登录")
+			return
+		}
+		userID = uid
+	}
+
+	// 调用服务获取分页结果
+	result, err := h.projectService.ListProjects(services.ProjectListFilter{
+		Keyword:    keyword,
+		IsArchived: isArchived,
+		OwnerName:  ownerName,
+		UserID:     userID,
+		Page:       page,
+		PageSize:   pageSize,
+	})
 	if err != nil {
 		response.InternalError(c, "获取项目列表失败")
 		return
 	}
 
-	// 转换为响应格式
-	projectResponses := make([]models.ProjectResponse, len(projects))
-	for i, project := range projects {
-		projectResponses[i] = project.ToResponse()
+	// 获取每个项目的所有者信息
+	db := repository.GetDB()
+	projectResponses := make([]models.ProjectResponse, len(result.Projects))
+	for i, project := range result.Projects {
+		resp := project.ToResponse()
+		// 查询项目所有者
+		var membership models.ProjectMembership
+		if err := db.
+			Joins("JOIN roles ON project_memberships.role_id = roles.id").
+			Where("project_memberships.project_id = ? AND roles.name = ? AND roles.scope = ?", project.ID, models.RoleOwner, "project").
+			First(&membership).Error; err == nil {
+			var owner models.User
+			if err := db.First(&owner, membership.UserID).Error; err == nil {
+				resp.OwnerID = owner.ID
+				resp.OwnerName = owner.DisplayName
+				resp.OwnerAvatar = owner.AvatarURL
+			}
+		}
+		projectResponses[i] = resp
 	}
 
-	response.Success(c, projectResponses)
+	// 返回分页结果
+	response.Success(c, gin.H{
+		"projects":    projectResponses,
+		"total":       result.Total,
+		"page":        result.Page,
+		"page_size":   result.PageSize,
+		"total_pages": result.TotalPages,
+	})
 }
 
 // GetMyProjects 获取当前用户参与的项目
@@ -106,11 +165,27 @@ func (h *ProjectHandler) GetProject(c *gin.Context) {
 	}
 
 	// 构建响应
+	db := repository.GetDB()
+	resp := project.ToResponse()
+	// 查询项目所有者
+	var membership models.ProjectMembership
+	if err := db.
+		Joins("JOIN roles ON project_memberships.role_id = roles.id").
+		Where("project_memberships.project_id = ? AND roles.name = ? AND roles.scope = ?", project.ID, models.RoleOwner, "project").
+		First(&membership).Error; err == nil {
+		var owner models.User
+		if err := db.First(&owner, membership.UserID).Error; err == nil {
+			resp.OwnerID = owner.ID
+			resp.OwnerName = owner.DisplayName
+			resp.OwnerAvatar = owner.AvatarURL
+		}
+	}
+
 	detailResp := struct {
 		models.ProjectResponse
 		TaskCounts map[string]int64 `json:"task_counts"`
 	}{
-		ProjectResponse: project.ToResponse(),
+		ProjectResponse: resp,
 		TaskCounts:      counts,
 	}
 

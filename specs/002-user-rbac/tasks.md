@@ -284,6 +284,25 @@
 
 ---
 
+## Phase 15: US13 - 项目列表增强 (优先级: P2)
+
+**目标**: 项目列表支持分页、过滤，任务卡片显示所有者信息
+
+**前置**: US11 (Phase 12)
+
+**独立测试**: 访问项目列表，验证分页切换、名称搜索、状态筛选、任务卡显示所有者
+
+- [x] T106 [US13] 扩展项目列表 API - 添加分页参数 `page`, `page_size` 和过滤参数 `keyword`（模糊搜索）, `is_archived`, `owner_name`（所有者名称模糊搜索），多条件 AND 组合 (`backend/internal/handlers/project.go`)
+- [x] T107 [US13] 更新 ProjectRepository - 添加分页查询方法 (`backend/internal/repository/project_repo.go`)
+- [x] T108 [US13] 更新项目列表前端 - 添加分页器组件 (`frontend/src/views/projects/ProjectList.vue`)
+- [x] T109 [US13] 更新项目列表前端 - 添加搜索框、状态筛选和所有者名称筛选 (`frontend/src/views/projects/ProjectList.vue`)
+- [x] T110 [US13] 更新任务卡片组件 - 显示项目所有者头像和名称 (`frontend/src/views/projects/ProjectList.vue` 项目卡片)
+- [ ] T111 [US13] 添加 AuditLog 记录 - 分页查询操作（N/A，可选）
+
+**检查点**: US13 完成 - 项目列表支持分页和过滤，任务卡显示所有者
+
+---
+
 ## Phase 14: 收尾与横切关注点
 
 **目的**: 完善文档、安全加固、清理
@@ -306,6 +325,7 @@
 - Phase 3-12 → 依赖 Phase 2
 - Phase 13 → 依赖 Phase 3 (US1)
 - Phase 14 → 依赖所有用户故事完成
+- Phase 15 → 依赖 Phase 12 (US11+US12)
 
 ### 用户故事依赖
 
@@ -323,6 +343,7 @@
 | US9c (P2) | US9 | 需要用户管理基础 |
 | US10 (P2) | US4 | 需要权限 API |
 | US11+US12 (P1) | US6+US7 | 需要项目管理 API |
+| US13 (P2) | US11+US12 | 需要项目管理前端基础 |
 
 ### 并行机会
 
@@ -353,7 +374,8 @@
 | Phase 12 (US11+US12) | 10 | 项目管理前端+权限 |
 | Phase 13 | 5 | 改造现有 API |
 | Phase 14 | 6 | 收尾 |
-| **总计** | **103** | |
+| Phase 15 (US13) | 6 | 项目列表增强（分页/过滤/所有者显示） |
+| **总计** | **109** | |
 
 ---
 
@@ -385,3 +407,4 @@
 - [x] US11+US12 完成 - 项目管理前端+按钮权限
 - [x] Phase 13 完成 - 现有 API 添加权限
 - [x] Phase 14 完成 - 文档完善
+- [x] Phase 15 完成 - 项目列表增强（分页/过滤/所有者显示）

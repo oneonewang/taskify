@@ -1,6 +1,6 @@
 <template>
   <div class="project-list-page">
-    <AppHeader title="项目" />
+    <AppHeader :title="activeTab === 'my' ? '我参与的项目' : '全部项目'" />
 
     <main class="page-content">
       <!-- Tab Bar -->
@@ -37,6 +37,42 @@
         </button>
       </div>
 
+      <!-- Search and Filter Bar (only for "全部项目" tab) -->
+      <div v-if="activeTab === 'all'" class="filter-bar animate-in">
+        <div class="search-input-wrapper">
+          <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input
+            v-model="filters.keyword"
+            type="text"
+            placeholder="搜索项目名称..."
+            class="search-input"
+            @input="debouncedSearch"
+          />
+        </div>
+        <select v-model="filters.isArchived" class="filter-select" @change="loadProjects">
+          <option :value="undefined">全部状态</option>
+          <option :value="false">活动中</option>
+          <option :value="true">已归档</option>
+        </select>
+        <input
+          v-model="filters.ownerName"
+          type="text"
+          placeholder="所有者名称..."
+          class="filter-input"
+          @input="debouncedSearch"
+        />
+        <button v-if="hasActiveFilters" class="btn btn-text" @click="clearFilters">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+          清除
+        </button>
+      </div>
+
       <!-- Loading State -->
       <div v-if="loading" class="loading-state animate-in">
         <div class="loading-spinner"></div>
@@ -67,6 +103,7 @@
         </div>
         <h3>暂无项目</h3>
         <p v-if="activeTab === 'my'">您还没有参与任何项目</p>
+        <p v-else-if="hasActiveFilters">没有符合筛选条件的项目</p>
         <p v-else>创建您的第一个项目开始吧</p>
         <button @click="showCreateDialog = true" class="btn btn-primary">
           创建第一个项目
@@ -74,57 +111,43 @@
       </div>
 
       <!-- Projects Grid -->
-      <div v-else class="projects-grid">
-        <div
-          v-for="(project, index) in projects"
-          :key="project.id"
-          class="project-card animate-in"
-          :style="{ animationDelay: `${index * 0.05}s` }"
-          @click="goToProject(project.id)"
-        >
-          <!-- Card Accent -->
-          <div class="card-accent"></div>
+      <div v-else>
+        <div class="projects-grid">
+          <ProjectCard
+            v-for="(project, index) in projects"
+            :key="project.id"
+            :project="project"
+            :style="{ animationDelay: `${index * 0.05}s` }"
+            class="animate-in"
+            @click="(project) => goToProject(project.id)"
+          />
+        </div>
 
-          <!-- Card Header -->
-          <div class="project-card-header">
-            <div class="project-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                <line x1="3" y1="9" x2="21" y2="9"/>
-                <line x1="9" y1="21" x2="9" y2="9"/>
-              </svg>
-            </div>
-            <h3 class="project-name">{{ project.name }}</h3>
-            <span v-if="project.is_archived" class="archived-badge">已归档</span>
+        <!-- Pagination -->
+        <div v-if="totalPages > 1" class="pagination">
+          <button
+            class="page-btn"
+            :disabled="currentPage <= 1"
+            @click="goToPage(currentPage - 1)"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="15 18 9 12 15 6"/>
+            </svg>
+          </button>
+          <div class="page-info">
+            <span class="page-current">{{ currentPage }}</span>
+            <span class="page-separator">/</span>
+            <span class="page-total">{{ totalPages }}</span>
           </div>
-
-          <!-- Project Description -->
-          <p class="project-description">{{ project.description || '暂无描述' }}</p>
-
-          <!-- Task Progress -->
-          <div v-if="project.task_counts" class="task-progress">
-            <div class="progress-bar">
-              <div
-                class="progress-fill"
-                :style="{ width: `${getProgressPercent(project.task_counts)}%` }"
-              ></div>
-            </div>
-            <span class="progress-text">{{ getDoneTasks(project.task_counts) }} / {{ getTotalTasks(project.task_counts) }}</span>
-          </div>
-
-          <!-- Card Footer -->
-          <div class="project-card-footer">
-            <div class="task-count-badge">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="9 11 12 14 22 4"/>
-                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-              </svg>
-              {{ getTotalTasks(project.task_counts) }} 任务
-            </div>
-            <span class="created-at">
-              {{ formatDate(project.created_at) }}
-            </span>
-          </div>
+          <button
+            class="page-btn"
+            :disabled="currentPage >= totalPages"
+            @click="goToPage(currentPage + 1)"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </button>
         </div>
       </div>
     </main>
@@ -138,12 +161,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { getProjects, getMyProjects } from '../../api/project'
+import { getProjects } from '../../api/project'
 import CreateProjectDialog from '../../components/project/CreateProjectDialog.vue'
+import ProjectCard from '../../components/project/ProjectCard.vue'
 import AppHeader from '../../components/AppHeader.vue'
-import type { Project, ApiResponse } from '../../api/project'
+import type { Project, ApiResponse, PaginatedProjects } from '../../api/project'
 
 const router = useRouter()
 const route = useRoute()
@@ -152,6 +176,27 @@ const loading = ref(false)
 const error = ref<string | null>(null)
 const showCreateDialog = ref(false)
 const activeTab = ref<'my' | 'all'>('my')
+
+// Pagination state
+const currentPage = ref(1)
+const pageSize = ref(20)
+const totalPages = ref(1)
+
+// Filter state
+const filters = ref({
+  keyword: '',
+  ownerName: '',
+  isArchived: undefined as boolean | undefined
+})
+
+// Debounce timer
+let searchTimer: number | null = null
+
+const hasActiveFilters = computed(() => {
+  return filters.value.keyword !== '' ||
+         filters.value.ownerName !== '' ||
+         filters.value.isArchived !== undefined
+})
 
 onMounted(async () => {
   if (route.name === 'ProjectNew' || route.query.new === 'true') {
@@ -164,11 +209,26 @@ async function loadProjects() {
   loading.value = true
   error.value = null
   try {
-    const res = activeTab.value === 'my'
-      ? await getMyProjects() as ApiResponse<Project[]>
-      : await getProjects() as ApiResponse<Project[]>
+    const params: any = {
+      page: currentPage.value,
+      page_size: pageSize.value
+    }
+    if (activeTab.value === 'my') {
+      params.my = 'true'
+    }
+    if (filters.value.keyword) {
+      params.keyword = filters.value.keyword
+    }
+    if (filters.value.ownerName) {
+      params.owner_name = filters.value.ownerName
+    }
+    if (filters.value.isArchived !== undefined) {
+      params.is_archived = filters.value.isArchived
+    }
+    const res = await getProjects(params) as ApiResponse<PaginatedProjects>
     if (res.code === 0) {
-      projects.value = res.data
+      projects.value = res.data.projects
+      totalPages.value = res.data.total_pages
     } else {
       error.value = res.message || '加载失败'
     }
@@ -179,31 +239,33 @@ async function loadProjects() {
   }
 }
 
+function debouncedSearch() {
+  if (searchTimer) {
+    clearTimeout(searchTimer)
+  }
+  searchTimer = window.setTimeout(() => {
+    currentPage.value = 1
+    loadProjects()
+  }, 300)
+}
+
 function switchTab(tab: 'my' | 'all') {
   activeTab.value = tab
+  currentPage.value = 1
+  filters.value = { keyword: '', ownerName: '', isArchived: undefined }
   loadProjects()
 }
 
-function getTotalTasks(taskCounts: any): number {
-  if (!taskCounts) return 0
-  return (taskCounts.todo || 0) + (taskCounts.in_progress || 0) +
-         (taskCounts.review || 0) + (taskCounts.done || 0)
+function goToPage(page: number) {
+  if (page < 1 || page > totalPages.value) return
+  currentPage.value = page
+  loadProjects()
 }
 
-function getDoneTasks(taskCounts: any): number {
-  if (!taskCounts) return 0
-  return taskCounts.done || 0
-}
-
-function getProgressPercent(taskCounts: any): number {
-  const total = getTotalTasks(taskCounts)
-  if (total === 0) return 0
-  return Math.round((getDoneTasks(taskCounts) / total) * 100)
-}
-
-function formatDate(dateStr: string): string {
-  const date = new Date(dateStr)
-  return date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })
+function clearFilters() {
+  filters.value = { keyword: '', ownerName: '', isArchived: undefined }
+  currentPage.value = 1
+  loadProjects()
 }
 
 function goToProject(projectId: number) {
@@ -237,7 +299,7 @@ function onProjectCreated(newProject: Project) {
   padding: var(--space-2);
   border-radius: var(--radius-xl);
   border: 1px solid var(--color-border);
-  margin-bottom: var(--space-6);
+  margin-bottom: var(--space-4);
 }
 
 .tab-btn {
@@ -278,6 +340,72 @@ function onProjectCreated(newProject: Project) {
   flex: 1;
 }
 
+/* Filter Bar */
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  background: var(--color-bg-surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  margin-bottom: var(--space-4);
+}
+
+.search-input-wrapper {
+  position: relative;
+  flex: 1;
+}
+
+.search-icon {
+  position: absolute;
+  left: var(--space-3);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-muted);
+}
+
+.search-input {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  padding-left: calc(var(--space-3) + 20px);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+  background: var(--color-bg-base);
+  transition: all var(--transition-base);
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary-light);
+}
+
+.filter-select,
+.filter-input {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+  background: var(--color-bg-base);
+  transition: all var(--transition-base);
+  min-width: 120px;
+}
+
+.filter-input {
+  min-width: 140px;
+}
+
+.filter-select:focus,
+.filter-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary-light);
+}
+
 /* Buttons */
 .btn {
   display: inline-flex;
@@ -303,6 +431,17 @@ function onProjectCreated(newProject: Project) {
   background: var(--color-primary-hover);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(91, 95, 199, 0.4);
+}
+
+.btn-text {
+  background: transparent;
+  color: var(--color-text-muted);
+  padding: var(--space-2);
+}
+
+.btn-text:hover {
+  color: var(--color-text-primary);
+  background: var(--color-bg-muted);
 }
 
 /* Loading State */
@@ -382,7 +521,7 @@ function onProjectCreated(newProject: Project) {
 /* Projects Grid */
 .projects-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: var(--space-5);
 }
 
@@ -463,40 +602,11 @@ function onProjectCreated(newProject: Project) {
   color: var(--color-text-secondary);
   font-size: var(--font-size-sm);
   line-height: var(--line-height-relaxed);
-  margin: 0 0 var(--space-4);
+  margin: 0 0 var(--space-3);
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-}
-
-/* Task Progress */
-.task-progress {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  margin-bottom: var(--space-4);
-}
-
-.progress-bar {
-  flex: 1;
-  height: 6px;
-  background: var(--color-bg-muted);
-  border-radius: var(--radius-full);
-  overflow: hidden;
-}
-
-.progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-success) 100%);
-  border-radius: var(--radius-full);
-  transition: width var(--transition-slow);
-}
-
-.progress-text {
-  font-size: var(--font-size-xs);
-  color: var(--color-text-muted);
-  font-weight: var(--font-weight-medium);
 }
 
 /* Card Footer */
@@ -508,20 +618,61 @@ function onProjectCreated(newProject: Project) {
   border-top: 1px solid var(--color-border);
 }
 
-.task-count-badge {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
+.created-at {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
 }
 
-.task-count-badge svg {
+/* Pagination */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+}
+
+.page-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.page-btn:hover:not(:disabled) {
+  border-color: var(--color-primary);
   color: var(--color-primary);
 }
 
-.created-at {
-  font-size: var(--font-size-xs);
+.page-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.page-info {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--font-size-sm);
+}
+
+.page-current {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-primary);
+}
+
+.page-separator {
+  color: var(--color-text-muted);
+}
+
+.page-total {
   color: var(--color-text-muted);
 }
 
@@ -545,8 +696,29 @@ function onProjectCreated(newProject: Project) {
     justify-content: center;
   }
 
+  .filter-bar {
+    flex-wrap: wrap;
+  }
+
+  .search-input-wrapper {
+    width: 100%;
+  }
+
+  .filter-select,
+  .filter-input {
+    flex: 1;
+    min-width: 0;
+  }
+
   .projects-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+/* Large screens - minimum 4 columns */
+@media (min-width: 1200px) {
+  .projects-grid {
+    grid-template-columns: repeat(4, 1fr);
   }
 }
 </style>

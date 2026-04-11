@@ -3,6 +3,7 @@
     v-model="dialogVisible"
     :title="isEdit ? '编辑任务' : '创建任务'"
     width="500px"
+    append-to-body
     @close="handleClose"
   >
     <el-form
