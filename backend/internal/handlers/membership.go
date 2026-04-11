@@ -37,6 +37,17 @@ type UpdateMemberRoleRequest struct {
 	RoleID uint `json:"role_id" binding:"required"`
 }
 
+// BatchAddMembersRequest 批量添加成员请求
+type BatchAddMembersRequest struct {
+	Members []BatchMemberItem `json:"members" binding:"required,min=1,max=50"`
+}
+
+// BatchMemberItem 批量添加成员项
+type BatchMemberItem struct {
+	UserEmail string `json:"user_email" binding:"required,email"`
+	RoleID    uint   `json:"role_id" binding:"required"`
+}
+
 // GetUserRoles 获取用户的角色
 // GET /api/users/:id/roles
 func (h *MembershipHandler) GetUserRoles(c *gin.Context) {
@@ -168,6 +179,43 @@ func (h *MembershipHandler) AddProjectMember(c *gin.Context) {
 	}
 
 	response.Created(c, "成员添加成功", nil)
+}
+
+// BatchAddProjectMembers 批量添加项目成员
+// POST /api/projects/:id/members/batch
+func (h *MembershipHandler) BatchAddProjectMembers(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.ParseUint(idStr, 10, 64)
+	if err != nil {
+		response.BadRequest(c, "无效的项目ID")
+		return
+	}
+
+	var req BatchAddMembersRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "请求参数错误")
+		return
+	}
+
+	success := 0
+	failed := 0
+	var errors []string
+
+	for _, member := range req.Members {
+		err := h.membershipService.AddProjectMember(uint(id), member.UserEmail, member.RoleID)
+		if err != nil {
+			failed++
+			errors = append(errors, member.UserEmail+": "+err.Error())
+		} else {
+			success++
+		}
+	}
+
+	response.Success(c, gin.H{
+		"success": success,
+		"failed":  failed,
+		"errors":  errors,
+	})
 }
 
 // UpdateMemberRole 更新成员角色

@@ -104,21 +104,23 @@ func registerRoutes(r *gin.Engine, projectHandler *handlers.ProjectHandler, task
 			adminRequired.GET("/audit-logs", auditLogHandler.ListAuditLogs)
 		}
 
-		// 项目路由
+		// 项目路由（需要登录）
 		project := api.Group("/projects")
+		project.Use(middleware.AuthRequired())
 		{
-			// 公开的查看路由（需要登录）
 			project.GET("", projectHandler.GetProjects)
+			project.GET("/my", projectHandler.GetMyProjects)
 			project.GET("/:id", projectHandler.GetProject)
 			project.GET("/:id/tasks", taskHandler.GetTasks)
 
 			// 项目所有者操作
 			projectOwner := project.Group("/:id")
-			projectOwner.Use(middleware.AuthRequired(), middleware.RequireProjectOwner())
+			projectOwner.Use(middleware.RequireProjectOwner())
 			{
 				projectOwner.PUT("", projectHandler.UpdateProject)
 				projectOwner.DELETE("", projectHandler.DeleteProject)
 				projectOwner.POST("/archive", projectHandler.ArchiveProject)
+				projectOwner.POST("/members/batch", membershipHandler.BatchAddProjectMembers)
 				projectOwner.POST("/members", membershipHandler.AddProjectMember)
 				projectOwner.PUT("/members/:user_id", membershipHandler.UpdateMemberRole)
 				projectOwner.DELETE("/members/:user_id", membershipHandler.RemoveProjectMember)
@@ -126,15 +128,15 @@ func registerRoutes(r *gin.Engine, projectHandler *handlers.ProjectHandler, task
 
 			// 项目成员操作（需要是项目成员）
 			projectMember := project.Group("/:id")
-			projectMember.Use(middleware.AuthRequired(), middleware.RequireProjectMember())
+			projectMember.Use(middleware.RequireProjectMember())
 			{
 				projectMember.GET("/members", membershipHandler.GetProjectMembers)
 				projectMember.POST("/tasks", taskHandler.CreateTask)
 				projectMember.GET("/my-membership", membershipHandler.GetMyProjectMembership)
 			}
 
-			// 项目创建（需要登录）
-			project.POST("", middleware.AuthRequired(), projectHandler.CreateProject)
+			// 项目创建
+			project.POST("", projectHandler.CreateProject)
 		}
 
 		// 任务路由（需要登录）

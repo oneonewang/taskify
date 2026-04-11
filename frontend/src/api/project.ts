@@ -72,6 +72,10 @@ export function getProjects(): Promise<ApiResponse<Project[]>> {
   return apiClient.get('/projects').then(res => res.data)
 }
 
+export function getMyProjects(): Promise<ApiResponse<Project[]>> {
+  return apiClient.get('/projects/my').then(res => res.data)
+}
+
 export function getProject(id: number): Promise<ApiResponse<ProjectDetail>> {
   return apiClient.get(`/projects/${id}`).then(res => res.data)
 }

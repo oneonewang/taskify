@@ -1,7 +1,23 @@
 <template>
   <div class="project-list-page">
     <div class="page-header">
-      <h1>我的项目</h1>
+      <div class="title-row">
+        <h1>项目</h1>
+        <div class="tab-bar">
+          <button
+            :class="['tab-btn', { active: activeTab === 'my' }]"
+            @click="switchTab('my')"
+          >
+            我参与的项目
+          </button>
+          <button
+            :class="['tab-btn', { active: activeTab === 'all' }]"
+            @click="switchTab('all')"
+          >
+            全部项目
+          </button>
+        </div>
+      </div>
       <div class="header-actions">
         <button v-if="authStore.isAdmin" @click="goToAdmin" class="btn btn-secondary">
           管理后台
@@ -16,7 +32,8 @@
     <div v-else-if="error" class="error">{{ error }}</div>
 
     <div v-else-if="projects.length === 0" class="empty-state">
-      <p>暂无项目</p>
+      <p v-if="activeTab === 'my'">暂未参与任何项目</p>
+      <p v-else>暂无项目</p>
       <button @click="showCreateDialog = true" class="btn btn-primary">
         创建第一个项目
       </button>
@@ -57,7 +74,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
-import { getProjects } from '../../api/project'
+import { getProjects, getMyProjects } from '../../api/project'
 import CreateProjectDialog from '../../components/project/CreateProjectDialog.vue'
 import type { Project, ApiResponse } from '../../api/project'
 
@@ -68,9 +85,9 @@ const projects = ref<Project[]>([])
 const loading = ref(false)
 const error = ref<string | null>(null)
 const showCreateDialog = ref(false)
+const activeTab = ref<'my' | 'all'>('my')
 
 onMounted(async () => {
-  // 检查是否通过路由跳转打开创建对话框
   if (route.name === 'ProjectNew' || route.query.new === 'true') {
     showCreateDialog.value = true
   }
@@ -81,7 +98,9 @@ async function loadProjects() {
   loading.value = true
   error.value = null
   try {
-    const res = await getProjects() as ApiResponse<Project[]>
+    const res = activeTab.value === 'my'
+      ? await getMyProjects() as ApiResponse<Project[]>
+      : await getProjects() as ApiResponse<Project[]>
     if (res.code === 0) {
       projects.value = res.data
     } else {
@@ -92,6 +111,11 @@ async function loadProjects() {
   } finally {
     loading.value = false
   }
+}
+
+function switchTab(tab: 'my' | 'all') {
+  activeTab.value = tab
+  loadProjects()
 }
 
 function getTotalTasks(taskCounts: any): number {
@@ -137,6 +161,40 @@ function goToAdmin() {
   margin: 0;
   font-size: 24px;
   color: #333;
+}
+
+.title-row {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.tab-bar {
+  display: flex;
+  gap: 4px;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.tab-btn {
+  padding: 8px 16px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #666;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.tab-btn:hover {
+  color: #1976d2;
+}
+
+.tab-btn.active {
+  color: #1976d2;
+  border-bottom-color: #1976d2;
+  font-weight: 600;
 }
 
 .loading, .error, .empty-state {

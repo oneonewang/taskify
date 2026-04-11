@@ -68,6 +68,28 @@ func (h *ProjectHandler) GetProjects(c *gin.Context) {
 	response.Success(c, projectResponses)
 }
 
+// GetMyProjects 获取当前用户参与的项目
+func (h *ProjectHandler) GetMyProjects(c *gin.Context) {
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		response.Unauthorized(c, "请先登录")
+		return
+	}
+
+	projects, err := h.projectService.GetUserProjects(userID)
+	if err != nil {
+		response.InternalError(c, "获取项目列表失败")
+		return
+	}
+
+	projectResponses := make([]models.ProjectResponse, len(projects))
+	for i, project := range projects {
+		projectResponses[i] = project.ToResponse()
+	}
+
+	response.Success(c, projectResponses)
+}
+
 // GetProject 获取项目详情
 func (h *ProjectHandler) GetProject(c *gin.Context) {
 	idStr := c.Param("id")
