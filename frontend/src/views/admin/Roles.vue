@@ -19,7 +19,7 @@
           <span class="scope-tag">{{ role.scope === 'system' ? '系统级' : '项目级' }}</span>
         </div>
         <div class="role-actions">
-          <button @click="openEditDialog(role)" class="btn btn-sm">编辑</button>
+          <button @click="openEditDialog(role)" class="btn btn-sm" :disabled="role.is_system">编辑</button>
           <button @click="openPermissionDialog(role)" class="btn btn-sm">权限</button>
           <button v-if="!role.is_system" @click="handleDeleteRole(role)" class="btn btn-sm btn-danger">删除</button>
         </div>
@@ -30,6 +30,7 @@
     <div v-if="showEditDialog" class="dialog-overlay" @click.self="closeEditDialog">
       <div class="dialog">
         <h3>{{ editingRole?.id ? '编辑角色' : '创建角色' }}</h3>
+        <div v-if="dialogError" class="dialog-error">{{ dialogError }}</div>
         <div class="form-group">
           <label>角色名称</label>
           <input v-model="editForm.name" type="text" :disabled="!!editingRole?.id" />
@@ -93,6 +94,7 @@ const roles = ref<Role[]>([])
 const permissions = ref<Permission[]>([])
 const loading = ref(false)
 const error = ref<string | null>(null)
+const dialogError = ref<string | null>(null)
 const showEditDialog = ref(false)
 const showPermissionDialog = ref(false)
 const editingRole = ref<Role | null>(null)
@@ -163,12 +165,14 @@ function togglePermission(permId: number) {
 }
 
 function openCreateDialog() {
+  dialogError.value = null
   editingRole.value = null
   editForm.value = { name: '', description: '' }
   showEditDialog.value = true
 }
 
 function openEditDialog(role: Role) {
+  dialogError.value = null
   editingRole.value = role
   editForm.value = { name: role.name, description: role.description }
   showEditDialog.value = true
@@ -177,10 +181,12 @@ function openEditDialog(role: Role) {
 function closeEditDialog() {
   showEditDialog.value = false
   editingRole.value = null
+  dialogError.value = null
   editForm.value = { name: '', description: '' }
 }
 
 async function saveRole() {
+  dialogError.value = null
   try {
     if (editingRole.value?.id) {
       const res = await updateRole(editingRole.value.id, {
@@ -190,7 +196,7 @@ async function saveRole() {
         await loadData()
         closeEditDialog()
       } else {
-        error.value = res.message
+        dialogError.value = res.message
       }
     } else {
       const res = await createRole({
@@ -202,11 +208,11 @@ async function saveRole() {
         await loadData()
         closeEditDialog()
       } else {
-        error.value = res.message
+        dialogError.value = res.message
       }
     }
   } catch (e: any) {
-    error.value = e.response?.data?.message || '操作失败'
+    dialogError.value = e.response?.data?.message || '操作失败'
   }
 }
 
@@ -395,6 +401,15 @@ async function handleSavePermissions() {
 .dialog h3 {
   margin: 0 0 16px;
   font-size: 18px;
+}
+
+.dialog-error {
+  background: #ffebee;
+  color: #c62828;
+  padding: 8px 12px;
+  border-radius: 4px;
+  margin-bottom: 16px;
+  font-size: 14px;
 }
 
 .form-group {

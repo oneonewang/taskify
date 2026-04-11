@@ -86,8 +86,8 @@ func (r *MembershipRepository) IsMember(userID, projectID uint) (bool, error) {
 func (r *MembershipRepository) GetUserMembershipsWithDetails(userID uint) ([]map[string]interface{}, error) {
 	var results []map[string]interface{}
 	err := r.db.Table("project_memberships").
-		Select("project_memberships.*, projects.name as project_name, roles.name as role_name, roles.display_name as role_display_name").
-		Joins("JOIN projects ON project_memberships.project_id = projects.id").
+		Select("project_memberships.*, projects.name as project_name, roles.name as role_name, roles.display_name as role_display_name, roles.scope as role_scope").
+		Joins("LEFT JOIN projects ON project_memberships.project_id = projects.id").
 		Joins("JOIN roles ON project_memberships.role_id = roles.id").
 		Where("project_memberships.user_id = ?", userID).
 		Scan(&results).Error

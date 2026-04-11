@@ -8,7 +8,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/taskify/backend/internal/middleware"
 	"github.com/taskify/backend/internal/models"
-	"github.com/taskify/backend/internal/repository"
 	"github.com/taskify/backend/pkg/response"
 	"golang.org/x/crypto/bcrypt"
 	"github.com/xuri/excelize/v2"
@@ -71,19 +70,18 @@ func (h *AdminUserHandler) GetImportTemplate(c *gin.Context) {
 	f.SetActiveSheet(sheetIndex)
 
 	// 设置表头
-	headers := []string{"邮箱", "显示名称", "角色"}
+	headers := []string{"邮箱", "显示名称"}
 	f.SetSheetRow(sheetName, "A1", headers)
 
 	// 添加示例数据
 	exampleData := [][]interface{}{
-		{"user1@example.com", "张三", "member"},
-		{"user2@example.com", "李四", "guest"},
+		{"user1@example.com", "张三"},
+		{"user2@example.com", "李四"},
 	}
 	for i, row := range exampleData {
 		rowNum := i + 2
 		f.SetCellValue(sheetName, fmt.Sprintf("A%d", rowNum), row[0])
 		f.SetCellValue(sheetName, fmt.Sprintf("B%d", rowNum), row[1])
-		f.SetCellValue(sheetName, fmt.Sprintf("C%d", rowNum), row[2])
 	}
 
 	// 设置列宽
@@ -135,9 +133,6 @@ func (h *AdminUserHandler) parseAndImportUsers(file *multipart.FileHeader) (*Imp
 		return result, nil
 	}
 
-	// 获取角色映射
-	roleMap := h.getRoleMap()
-
 	// 跳过表头，从第二行开始
 	for i, row := range rows[1:] {
 		if len(row) < 2 {
@@ -148,10 +143,6 @@ func (h *AdminUserHandler) parseAndImportUsers(file *multipart.FileHeader) (*Imp
 
 		email := strings.TrimSpace(row[0])
 		displayName := strings.TrimSpace(row[1])
-		roleName := "member" // 默认角色
-		if len(row) > 2 {
-			roleName = strings.TrimSpace(row[2])
-		}
 
 		// 验证邮箱格式
 		if email == "" || !isValidImportEmail(email) {
@@ -176,7 +167,7 @@ func (h *AdminUserHandler) parseAndImportUsers(file *multipart.FileHeader) (*Imp
 			continue
 		}
 
-		// 创建用户
+		// 创建用户（不分配全局角色，角色通过项目管理页面分配）
 		user := &models.User{
 			Email:        email,
 			DisplayName:  displayName,
@@ -191,39 +182,10 @@ func (h *AdminUserHandler) parseAndImportUsers(file *multipart.FileHeader) (*Imp
 			continue
 		}
 
-		// 分配默认角色
-		if roleID, ok := roleMap[roleName]; ok {
-			h.assignRoleToUser(user.ID, roleID)
-		}
-
 		result.Success++
 	}
 
 	return result, nil
-}
-
-// getRoleMap 获取角色名称到ID的映射
-func (h *AdminUserHandler) getRoleMap() map[string]uint {
-	roleMap := make(map[string]uint)
-	roleRepo := repository.NewRoleRepository()
-	roles, err := roleRepo.GetAll()
-	if err != nil {
-		return roleMap
-	}
-	for _, role := range roles {
-		roleMap[role.Name] = role.ID
-	}
-	return roleMap
-}
-
-// assignRoleToUser 为用户分配角色
-func (h *AdminUserHandler) assignRoleToUser(userID, roleID uint) error {
-	membership := models.ProjectMembership{
-		UserID: userID,
-		// ProjectID 为0表示系统级角色
-		RoleID: roleID,
-	}
-	return repository.GetDB().Create(&membership).Error
 }
 
 // isValidImportEmail 验证邮箱格式（用于导入）

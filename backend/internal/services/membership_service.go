@@ -125,15 +125,21 @@ func (s *MembershipService) GetUserMemberships(userID uint) (map[string]interfac
 	}
 
 	// 分离系统角色和项目成员资格
+	// 系统角色：ProjectID=0 且 role.scope=system
+	// 项目成员：ProjectID>0，或者 ProjectID=0 但 role.scope=project
 	var systemRoles []string
 	var projectMemberships []map[string]interface{}
 
 	for _, m := range memberships {
-		if projectID, ok := m["project_id"].(uint64); ok && projectID == 0 {
-			if roleName, ok := m["role_name"].(string); ok {
-				systemRoles = append(systemRoles, roleName)
-			}
+		projectID, _ := m["project_id"].(uint64)
+		roleScope, _ := m["role_scope"].(string)
+		roleName, _ := m["role_name"].(string)
+
+		if projectID == 0 && roleScope == "system" {
+			// 系统级角色
+			systemRoles = append(systemRoles, roleName)
 		} else {
+			// 项目成员资格（ProjectID>0 或 scope=project）
 			projectMemberships = append(projectMemberships, m)
 		}
 	}

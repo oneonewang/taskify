@@ -6,7 +6,7 @@
       <div class="dialog-content">
         <p class="description">
           请上传 Excel 文件（.xlsx 格式）<br />
-          文件应包含三列：邮箱、显示名称、角色
+          文件应包含两列：邮箱、显示名称
         </p>
 
         <div class="upload-area" @click="triggerFileInput">
