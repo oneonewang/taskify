@@ -59,6 +59,12 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
+      path: '/projects/:id/tasks/:taskId',
+      name: 'TaskDetailPage',
+      component: ProjectKanban,
+      meta: { requiresAuth: true }
+    },
+    {
       path: '/projects/:id/settings',
       name: 'ProjectSettings',
       component: ProjectSettings,

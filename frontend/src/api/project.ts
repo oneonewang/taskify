@@ -102,6 +102,10 @@ export function getProjectTasks(projectId: number, status?: string): Promise<Api
   return apiClient.get(`/projects/${projectId}/tasks`, { params }).then(res => res.data)
 }
 
+export function getProjectTask(projectId: number, taskId: number): Promise<ApiResponse<Task>> {
+  return apiClient.get(`/projects/${projectId}/tasks/${taskId}`).then(res => res.data)
+}
+
 export function createProject(data: CreateProjectRequest): Promise<ApiResponse<Project>> {
   return apiClient.post('/projects', data).then(res => res.data)
 }

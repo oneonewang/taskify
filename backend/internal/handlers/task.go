@@ -42,6 +42,35 @@ func (h *TaskHandler) GetTasks(c *gin.Context) {
 	response.Success(c, taskResponses)
 }
 
+// GetTaskByProject 获取指定项目的任务（用于分享链接直接访问）
+func (h *TaskHandler) GetTaskByProject(c *gin.Context) {
+	projectIDStr := c.Param("id")
+	taskIDStr := c.Param("taskId")
+
+	projectID := uint(parseUint(projectIDStr))
+	taskID := uint(parseUint(taskIDStr))
+
+	// 获取当前用户ID
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		response.Unauthorized(c, "请先登录")
+		return
+	}
+
+	// 获取任务并验证项目和成员资格
+	task, err := h.taskService.GetTaskByProject(userID, projectID, taskID)
+	if err != nil {
+		if err.Error() == "无权访问此任务" {
+			response.Forbidden(c, "您不是该项目成员")
+			return
+		}
+		response.NotFound(c, "任务不存在")
+		return
+	}
+
+	response.Success(c, task.ToResponse())
+}
+
 // CreateTask 创建新任务
 func (h *TaskHandler) CreateTask(c *gin.Context) {
 	projectIDStr := c.Param("id")

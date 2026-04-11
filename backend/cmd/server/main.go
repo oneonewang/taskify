@@ -112,6 +112,7 @@ func registerRoutes(r *gin.Engine, projectHandler *handlers.ProjectHandler, task
 			project.GET("/my", projectHandler.GetMyProjects)
 			project.GET("/:id", projectHandler.GetProject)
 			project.GET("/:id/tasks", taskHandler.GetTasks)
+			project.GET("/:id/tasks/:taskId", taskHandler.GetTaskByProject)
 
 			// 项目所有者操作
 			projectOwner := project.Group("/:id")

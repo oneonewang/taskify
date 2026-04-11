@@ -16,6 +16,9 @@
         <el-button v-if="canEdit" type="primary" text @click="showEditDialog = true">
           编辑
         </el-button>
+        <el-button type="info" text @click="shareTask">
+          分享
+        </el-button>
       </div>
       <div class="task-meta">
         <el-tag :type="statusType" size="small">{{ statusText }}</el-tag>
@@ -179,6 +182,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   'update:visible': [value: boolean]
   'task-updated': [task: Task]
+  'close': []
 }>()
 
 const authStore = useAuthStore()
@@ -194,6 +198,17 @@ async function checkEditPermission() {
   } else {
     canEdit.value = false
   }
+}
+
+// 分享任务 - 复制链接到剪贴板
+function shareTask() {
+  if (!props.task?.project_id || !props.task?.id) return
+  const url = `${window.location.origin}/projects/${props.task.project_id}/tasks/${props.task.id}`
+  navigator.clipboard.writeText(url).then(() => {
+    ElMessage.success('链接已复制到剪贴板')
+  }).catch(() => {
+    ElMessage.error('复制失败，请手动复制')
+  })
 }
 
 // 编辑成功后更新任务信息
@@ -382,6 +397,7 @@ function handleClose() {
   editContent.value = ''
   deleteDialogVisible.value = false
   commentToDelete.value = null
+  emit('close')
 }
 
 // 监听 visible 变化

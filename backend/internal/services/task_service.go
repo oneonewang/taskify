@@ -53,6 +53,27 @@ func (s *TaskService) GetTask(taskID uint) (*models.Task, error) {
 	return s.taskRepo.FindByID(taskID)
 }
 
+// GetTaskByProject 获取指定项目的任务（验证项目和成员资格）
+func (s *TaskService) GetTaskByProject(userID, projectID, taskID uint) (*models.Task, error) {
+	// 验证项目访问权限
+	hasAccess, err := s.CheckProjectAccess(userID, projectID)
+	if err != nil || !hasAccess {
+		return nil, errors.New("无权访问此任务")
+	}
+
+	// 获取任务并验证属于指定项目
+	task, err := s.taskRepo.FindByID(taskID)
+	if err != nil {
+		return nil, errors.New("任务不存在")
+	}
+
+	if task.ProjectID != projectID {
+		return nil, errors.New("任务不属于此项目")
+	}
+
+	return task, nil
+}
+
 // CreateTask 创建任务
 func (s *TaskService) CreateTask(projectID uint, title, description string, assigneeID uint) (*models.Task, error) {
 	// 验证负责人存在

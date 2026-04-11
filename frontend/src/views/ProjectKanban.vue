@@ -81,6 +81,7 @@
       v-model:visible="taskDetailVisible"
       :task="selectedTask"
       @task-updated="onTaskUpdated"
+      @close="onTaskDetailClose"
     />
   </div>
 </template>
@@ -92,7 +93,7 @@ import { ElMessage } from 'element-plus'
 import { useAuthStore } from '../stores/auth'
 import { useProjectStore } from '../stores/project'
 import { useSSEStoreUpdater } from '../composables/useSSEStoreUpdater'
-import { getProjects } from '../api/project'
+import { getProjects, getProjectTask } from '../api/project'
 import { updateTaskStatus, type UpdateTaskStatusRequest } from '../api/task'
 import type { Project, Task } from '../api/project'
 import KanbanBoard from '../components/kanban/KanbanBoard.vue'
@@ -137,6 +138,11 @@ onMounted(async () => {
     selectedProjectId.value = projectIdFromRoute.value
     await projectStore.loadProject(selectedProjectId.value)
     teamMembersRef.value?.loadMembers(selectedProjectId.value)
+    // Handle direct task link (share feature)
+    const taskId = Number(route.params.taskId)
+    if (taskId) {
+      await loadTaskFromUrl(taskId)
+    }
   } else {
     try {
       const res = await getProjects()
@@ -157,6 +163,36 @@ watch(() => route.params.id, async (newId) => {
     teamMembersRef.value?.loadMembers(selectedProjectId.value)
   }
 })
+
+// Watch for taskId param (direct link access via share)
+watch(() => route.params.taskId, async (newTaskId) => {
+  if (newTaskId && selectedProjectId.value) {
+    await loadTaskFromUrl(Number(newTaskId))
+  }
+})
+
+// Load task from URL (for share links)
+async function loadTaskFromUrl(taskId: number) {
+  try {
+    const res = await getProjectTask(selectedProjectId.value, taskId)
+    if (res.code === 0) {
+      selectedTask.value = res.data
+      taskDetailVisible.value = true
+    } else if (res.code === 403) {
+      ElMessage.error('您不是该项目成员，无权访问此任务')
+    } else if (res.code === 404) {
+      ElMessage.error('任务不存在')
+    }
+  } catch (e: any) {
+    if (e.response?.status === 403) {
+      ElMessage.error('您不是该项目成员，无权访问此任务')
+    } else if (e.response?.status === 404) {
+      ElMessage.error('任务不存在')
+    } else {
+      ElMessage.error('加载任务失败')
+    }
+  }
+}
 
 async function onProjectChange(projectId: number) {
   router.push(`/projects/${projectId}`)
@@ -204,6 +240,13 @@ function onTaskClick(task: Task) {
 
 function onTaskUpdated(updatedTask: Task) {
   projectStore.updateTask(updatedTask.id, updatedTask)
+}
+
+// Task detail dialog closed - navigate back to kanban view
+function onTaskDetailClose() {
+  if (selectedProjectId.value) {
+    router.push(`/projects/${selectedProjectId.value}`)
+  }
 }
 </script>
 

@@ -19,3 +19,5 @@ Thumbs.db
 .env*
 !.env.example
 .claude/settings.json
+**/__debug_bin*
+**/taskify.db

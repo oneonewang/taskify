@@ -303,6 +303,27 @@
 
 ---
 
+## Phase 16: US14 - 任务分享功能 (优先级: P2)
+
+**目标**: 用户可以分享任务链接，其他成员通过链接直接访问任务详情
+
+**前置**: Phase 8 (US6+US7 项目管理与成员)
+
+**独立测试**: 在任务详情页点击分享，复制链接到新标签页打开，验证任务详情显示和非成员访问返回403
+
+- [x] T112 [US14] 添加任务详情 API - GET /api/projects/:projectId/tasks/:taskId，验证项目成员权限 (`backend/internal/handlers/task.go`)
+- [x] T113 [US14] 添加 TaskService.GetTaskByProject 方法 - 联合查询验证项目和任务存在性及成员资格 (`backend/internal/services/task_service.go`)
+- [x] T114 [US14] 前端路由添加任务详情路由 - `/projects/:projectId/tasks/:taskId` (`frontend/src/router/index.ts`)
+- [x] T115 [US14] TaskDetail 支持 URL 直接访问 - 接收 route params 加载任务 (`frontend/src/components/task/TaskDetail.vue`)
+- [x] T116 [US14] 任务详情页添加分享按钮 - 点击复制链接到剪贴板 (`frontend/src/components/task/TaskDetail.vue`)
+- [x] T117 [US14] 分享链接非成员访问返回 403 提示 (`frontend/src/components/task/TaskDetail.vue`)
+
+**检查点**: US14 完成 - 任务可以分享，成员可通过链接访问
+
+- [x] Phase 16 完成 - 任务分享功能（US14）
+
+---
+
 ## Phase 14: 收尾与横切关注点
 
 **目的**: 完善文档、安全加固、清理
@@ -344,6 +365,7 @@
 | US10 (P2) | US4 | 需要权限 API |
 | US11+US12 (P1) | US6+US7 | 需要项目管理 API |
 | US13 (P2) | US11+US12 | 需要项目管理前端基础 |
+| US14 (P2) | US6+US7 | 需要任务基础和项目管理 |
 
 ### 并行机会
 
