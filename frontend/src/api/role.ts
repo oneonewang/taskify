@@ -35,7 +35,7 @@ export interface Role {
 }
 
 // 获取所有角色
-export async function getRoles(): Promise<ApiResponse<Role[]>> {
+export async function getRoles(): Promise<ApiResponse<{ roles: Role[] }>> {
   const res = await apiClient.get('/admin/roles')
   return res.data
 }

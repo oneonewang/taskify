@@ -2,9 +2,14 @@
   <div class="project-list-page">
     <div class="page-header">
       <h1>我的项目</h1>
-      <button @click="showCreateDialog = true" class="btn btn-primary">
-        创建项目
-      </button>
+      <div class="header-actions">
+        <button v-if="authStore.isAdmin" @click="goToAdmin" class="btn btn-secondary">
+          管理后台
+        </button>
+        <button @click="showCreateDialog = true" class="btn btn-primary">
+          创建项目
+        </button>
+      </div>
     </div>
 
     <div v-if="loading" class="loading">加载中...</div>
@@ -51,12 +56,14 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { useAuthStore } from '../../stores/auth'
 import { getProjects } from '../../api/project'
 import CreateProjectDialog from '../../components/project/CreateProjectDialog.vue'
 import type { Project, ApiResponse } from '../../api/project'
 
 const router = useRouter()
 const route = useRoute()
+const authStore = useAuthStore()
 const projects = ref<Project[]>([])
 const loading = ref(false)
 const error = ref<string | null>(null)
@@ -105,6 +112,10 @@ function goToProject(projectId: number) {
 function onProjectCreated(newProject: Project) {
   projects.value.unshift(newProject)
   showCreateDialog.value = false
+}
+
+function goToAdmin() {
+  router.push('/admin')
 }
 </script>
 
@@ -218,5 +229,14 @@ function onProjectCreated(newProject: Project) {
 
 .btn-primary:hover {
   background: #1565c0;
+}
+
+.btn-secondary {
+  background: #6c757d;
+  color: #fff;
+}
+
+.btn-secondary:hover {
+  background: #5a6268;
 }
 </style>

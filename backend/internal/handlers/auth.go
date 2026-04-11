@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/taskify/backend/config"
 	"github.com/taskify/backend/internal/middleware"
+	"github.com/taskify/backend/internal/repository"
 	"github.com/taskify/backend/internal/services"
 	"github.com/taskify/backend/pkg/response"
 )
@@ -111,6 +112,9 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	})
 	session.Save()
 
+	isAdmin, _ := repository.NewMembershipRepository().IsAdmin(authResp.User.ID)
+	authResp.User.IsAdmin = isAdmin
+
 	response.Success(c, authResp)
 }
 
@@ -149,6 +153,9 @@ func (h *AuthHandler) GetCurrentUser(c *gin.Context) {
 		response.NotFound(c, err.Error())
 		return
 	}
+
+	isAdmin, _ := repository.NewMembershipRepository().IsAdmin(userID)
+	userResp.IsAdmin = isAdmin
 
 	response.Success(c, userResp)
 }

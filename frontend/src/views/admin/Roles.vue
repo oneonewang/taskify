@@ -113,12 +113,12 @@ async function loadData() {
   error.value = null
   try {
     const [rolesRes, permsRes] = await Promise.all([
-      getRoles() as Promise<ApiResponse<Role[]>>,
+      getRoles() as Promise<ApiResponse<{ roles: Role[] }>>,
       getPermissions() as Promise<ApiResponse<{ permissions: Permission[] }>>
     ])
 
     if (rolesRes.code === 0) {
-      roles.value = rolesRes.data
+      roles.value = rolesRes.data.roles
     } else {
       error.value = rolesRes.message
     }

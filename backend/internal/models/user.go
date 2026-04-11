@@ -25,14 +25,15 @@ func (User) TableName() string {
 
 // UserResponse 用户API响应
 type UserResponse struct {
-	ID            uint      `json:"id"`
-	Email         string    `json:"email"`
-	DisplayName   string    `json:"display_name"`
-	AvatarURL     string    `json:"avatar_url"`
-	EmailVerified bool      `json:"email_verified"`
-	IsDisabled    bool      `json:"is_disabled"`
+	ID            uint       `json:"id"`
+	Email         string     `json:"email"`
+	DisplayName   string     `json:"display_name"`
+	AvatarURL     string     `json:"avatar_url"`
+	EmailVerified bool       `json:"email_verified"`
+	IsDisabled    bool       `json:"is_disabled"`
+	IsAdmin       bool       `json:"is_admin"`
 	LastLoginAt   *time.Time `json:"last_login_at,omitempty"`
-	CreatedAt     time.Time `json:"created_at"`
+	CreatedAt     time.Time  `json:"created_at"`
 }
 
 // ToResponse 转换为API响应格式

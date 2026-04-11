@@ -23,6 +23,7 @@ export interface User {
   display_name: string
   avatar_url: string
   email_verified: boolean
+  is_admin: boolean
   last_login_at?: string
   created_at: string
 }

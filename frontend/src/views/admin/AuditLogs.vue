@@ -137,7 +137,7 @@ async function loadLogs() {
     const res = await getAuditLogs(query)
     if (res.code === 0) {
       logs.value = res.data.logs
-      total.value = res.data.pagination.total
+      total.value = res.data.total
     } else {
       error.value = res.message
     }

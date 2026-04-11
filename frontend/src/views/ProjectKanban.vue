@@ -12,6 +12,7 @@
           />
         </el-select>
         <el-button v-if="canManageProject" @click="goToSettings">项目设置</el-button>
+        <el-button v-if="authStore.isAdmin" @click="goToAdmin">管理后台</el-button>
         <el-button @click="goToProfile">个人资料</el-button>
         <el-button @click="handleLogout">退出登录</el-button>
       </div>
@@ -131,6 +132,10 @@ function goToSettings() {
 
 function goToProfile() {
   router.push('/profile')
+}
+
+function goToAdmin() {
+  router.push('/admin')
 }
 
 // 任务移动处理

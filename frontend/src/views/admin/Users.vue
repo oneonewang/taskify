@@ -189,7 +189,7 @@ async function loadData() {
         page: currentPage.value,
         page_size: pageSize.value
       }) as Promise<ApiResponse<UserListResponse>>,
-      getRoles() as Promise<ApiResponse<Role[]>>
+      getRoles() as Promise<ApiResponse<{ roles: Role[] }>>
     ])
 
     if (usersRes.code === 0) {
@@ -201,7 +201,7 @@ async function loadData() {
     }
 
     if (rolesRes.code === 0) {
-      roles.value = rolesRes.data.filter((r: Role) => r.scope === 'system')
+      roles.value = rolesRes.data.roles.filter((r: Role) => r.scope === 'system')
       availableRoles.value = roles.value
     }
 

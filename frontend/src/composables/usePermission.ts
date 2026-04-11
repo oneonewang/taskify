@@ -52,8 +52,7 @@ export function usePermission() {
 
   // 检查用户是否有指定权限
   function hasPermission(_resource: string, _action: string): boolean {
-    // admin@example.com 拥有所有权限
-    if (authStore.user?.email === 'admin@example.com') {
+    if (authStore.isAdmin) {
       return true
     }
     // TODO: 从用户角色和权限映射中检查
@@ -62,7 +61,7 @@ export function usePermission() {
 
   // 检查是否是项目所有者
   async function isProjectOwner(projectId: number): Promise<boolean> {
-    if (authStore.user?.email === 'admin@example.com') {
+    if (authStore.isAdmin) {
       return true
     }
     const membership = await fetchMyMembership(projectId)
@@ -71,7 +70,7 @@ export function usePermission() {
 
   // 检查是否是项目成员
   async function isProjectMember(projectId: number): Promise<boolean> {
-    if (authStore.user?.email === 'admin@example.com') {
+    if (authStore.isAdmin) {
       return true
     }
     const membership = await fetchMyMembership(projectId)
@@ -80,7 +79,7 @@ export function usePermission() {
 
   // 检查是否可以管理项目成员（只有所有者可以）
   async function canManageProjectMembers(projectId: number): Promise<boolean> {
-    if (authStore.user?.email === 'admin@example.com') {
+    if (authStore.isAdmin) {
       return true
     }
     const membership = await fetchMyMembership(projectId)
@@ -89,7 +88,7 @@ export function usePermission() {
 
   // 检查是否可以删除项目（只有所有者可以）
   async function canDeleteProject(projectId: number): Promise<boolean> {
-    if (authStore.user?.email === 'admin@example.com') {
+    if (authStore.isAdmin) {
       return true
     }
     const membership = await fetchMyMembership(projectId)
@@ -98,7 +97,7 @@ export function usePermission() {
 
   // 检查是否可以编辑任务
   async function canEditTask(projectId: number): Promise<boolean> {
-    if (authStore.user?.email === 'admin@example.com') {
+    if (authStore.isAdmin) {
       return true
     }
     const membership = await fetchMyMembership(projectId)
@@ -107,7 +106,7 @@ export function usePermission() {
 
   // 检查是否可以删除任务（任务创建者或项目所有者）
   async function canDeleteTask(projectId: number, taskCreatorId: number): Promise<boolean> {
-    if (authStore.user?.email === 'admin@example.com') {
+    if (authStore.isAdmin) {
       return true
     }
     // 任务创建者可以删除自己的任务

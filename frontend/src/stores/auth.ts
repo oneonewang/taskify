@@ -8,7 +8,7 @@ export const useAuthStore = defineStore('auth', () => {
   const error = ref<string | null>(null)
 
   const isLoggedIn = computed(() => user.value !== null)
-  const isAdmin = computed(() => user.value?.email === 'admin@example.com') // 临时判断逻辑
+  const isAdmin = computed(() => user.value?.is_admin === true)
 
   // 初始化 - 从服务器获取当前用户
   async function init() {

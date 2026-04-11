@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/taskify/backend/internal/models"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // SeedData 填充种子数据（预定义角色和权限）
@@ -176,5 +177,59 @@ func seedRolePermissions() error {
 	}
 
 	log.Println("角色权限分配成功")
+
+	// 创建管理员账号（如不存在）
+	if err := seedAdminUser(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// seedAdminUser 创建默认管理员账号
+func seedAdminUser() error {
+	adminEmail := "admin@taskify.local"
+
+	var existingUser models.User
+	result := DB.Where("email = ?", adminEmail).First(&existingUser)
+	if result.RowsAffected > 0 {
+		log.Println("管理员账号已存在，跳过创建")
+		return nil
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte("admin123"), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+
+	user := models.User{
+		Email:         adminEmail,
+		DisplayName:   "系统管理员",
+		PasswordHash:  string(hashedPassword),
+		EmailVerified: true,
+		IsDisabled:    false,
+	}
+
+	if err := DB.Create(&user).Error; err != nil {
+		return err
+	}
+
+	// 关联 admin 角色（system scope）
+	var adminRole models.Role
+	if err := DB.Where("name = ? AND scope = ?", models.RoleAdmin, "system").First(&adminRole).Error; err != nil {
+		return err
+	}
+
+	membership := models.ProjectMembership{
+		UserID:   user.ID,
+		ProjectID: 0, // system-level role，不属于具体项目
+		RoleID:   adminRole.ID,
+	}
+
+	if err := DB.Create(&membership).Error; err != nil {
+		return err
+	}
+
+	log.Printf("管理员账号创建成功: %s / admin123\n", adminEmail)
 	return nil
 }

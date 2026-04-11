@@ -106,11 +106,8 @@ router.beforeEach(async (to, _from, next) => {
 
   // 如果需要管理员权限
   if (to.meta.requiresAdmin && !authStore.isAdmin) {
-    // 临时：如果是 admin@example.com 则允许
-    if (authStore.user?.email !== 'admin@example.com') {
-      next({ name: 'ProjectKanban' })
-      return
-    }
+    next({ name: 'ProjectKanban' })
+    return
   }
 
   // 如果是访客专用页面（如登录、注册）且已登录

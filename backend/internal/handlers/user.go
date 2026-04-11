@@ -3,6 +3,7 @@ package handlers
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/taskify/backend/internal/middleware"
+	"github.com/taskify/backend/internal/repository"
 	"github.com/taskify/backend/internal/services"
 	"github.com/taskify/backend/pkg/response"
 )
@@ -33,6 +34,9 @@ func (h *UserHandler) GetCurrentUser(c *gin.Context) {
 		response.NotFound(c, err.Error())
 		return
 	}
+
+	isAdmin, _ := repository.NewMembershipRepository().IsAdmin(userID)
+	userResp.IsAdmin = isAdmin
 
 	response.Success(c, userResp)
 }

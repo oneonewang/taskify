@@ -27,17 +27,13 @@ export interface AuditLog {
   created_at: string
 }
 
-// 分页类型
-export interface Pagination {
-  total: number
-  page: number
-  page_size: number
-}
-
 // 审计日志列表响应
 export interface AuditLogListResponse {
   logs: AuditLog[]
-  pagination: Pagination
+  total: number
+  page: number
+  page_size: number
+  total_pages: number
 }
 
 // 查询参数

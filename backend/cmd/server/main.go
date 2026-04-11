@@ -99,6 +99,9 @@ func registerRoutes(r *gin.Engine, projectHandler *handlers.ProjectHandler, task
 			adminRequired.POST("/users/:id/roles", membershipHandler.AssignSystemRole)
 			adminRequired.DELETE("/users/:id/roles/:role_id", membershipHandler.RemoveSystemRole)
 			adminRequired.GET("/users/:id/project-memberships", membershipHandler.GetUserProjectMemberships)
+			// 审计日志
+			auditLogHandler := handlers.NewAuditLogHandler()
+			adminRequired.GET("/audit-logs", auditLogHandler.ListAuditLogs)
 		}
 
 		// 项目路由
