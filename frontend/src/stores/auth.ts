@@ -74,10 +74,10 @@ export const useAuthStore = defineStore('auth', () => {
     error.value = null
     try {
       await apiLogout()
-      user.value = null
     } catch (e: any) {
-      error.value = e.response?.data?.message || '登出失败'
+      // Ignore API errors, still clear local state
     } finally {
+      user.value = null
       loading.value = false
     }
   }

@@ -1,14 +1,16 @@
 <template>
   <div id="app">
     <router-view />
+    <AppBottom />
   </div>
 </template>
 
 <script setup lang="ts">
-// Root application component
+import AppBottom from './components/AppBottom.vue'
 </script>
 
 <style>
+/* Global Reset - Additional styles in assets/styles/global.css */
 * {
   margin: 0;
   padding: 0;
@@ -18,6 +20,19 @@
 html, body, #app {
   width: 100%;
   height: 100%;
-  font-family: 'Helvetica Neue', Helvetica, Arial, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+
+/* Typography defaults handled by global.css */
+
+/* Prevent FOUC */
+#app {
+  opacity: 1;
+}
+
+/* Add padding-bottom to main content to account for bottom nav on mobile */
+@media (max-width: 768px) {
+  body {
+    padding-bottom: 64px;
+  }
 }
 </style>

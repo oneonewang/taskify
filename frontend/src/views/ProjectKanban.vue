@@ -1,45 +1,69 @@
 <template>
   <div class="project-kanban">
-    <div class="header">
-      <h1>{{ projectStore.currentProject?.name || '加载中...' }}</h1>
-      <div class="header-actions">
-        <el-select v-model="selectedProjectId" placeholder="选择项目" @change="onProjectChange">
-          <el-option
-            v-for="project in projects"
-            :key="project.id"
-            :label="project.name"
-            :value="project.id"
-          />
-        </el-select>
-        <el-button v-if="canManageProject" @click="goToSettings">项目设置</el-button>
-        <el-button v-if="authStore.isAdmin" @click="goToAdmin">管理后台</el-button>
-        <el-button @click="goToProfile">个人资料</el-button>
-        <el-button @click="handleLogout">退出登录</el-button>
-      </div>
-    </div>
+    <AppHeader>
+      <template #center>
+        <div class="project-selector" v-if="projects.length > 0">
+          <el-select
+            v-model="selectedProjectId"
+            placeholder="选择项目"
+            size="default"
+            class="project-select"
+            @change="onProjectChange"
+          >
+            <template #prefix>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                <line x1="3" y1="9" x2="21" y2="9"/>
+                <line x1="9" y1="21" x2="9" y2="9"/>
+              </svg>
+            </template>
+            <el-option
+              v-for="project in projects"
+              :key="project.id"
+              :label="project.name"
+              :value="project.id"
+            />
+          </el-select>
+        </div>
+      </template>
+    </AppHeader>
 
-    <div class="content-wrapper">
-      <div class="main-content">
-        <div v-if="projectStore.loading" class="loading">加载中...</div>
-        <div v-else-if="projectStore.error" class="error">{{ projectStore.error }}</div>
-        <template v-else>
-          <KanbanBoard
-            :columns="projectStore.columns"
-            :tasks="projectStore.tasks"
-            :current-user-id="currentUserId"
-            :project-id="selectedProjectId"
-            @task-click="onTaskClick"
-            @task-moved="onTaskMoved"
-            @tasks-updated="onTasksUpdated"
-          />
-        </template>
+    <main class="kanban-main">
+      <div class="content-wrapper">
+        <div class="main-content">
+          <div v-if="projectStore.loading" class="loading-state animate-in">
+            <div class="loading-spinner"></div>
+            <span>加载中...</span>
+          </div>
+          <div v-else-if="projectStore.error" class="error-state animate-in">
+            <div class="error-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+            </div>
+            <span>{{ projectStore.error }}</span>
+          </div>
+          <template v-else>
+            <KanbanBoard
+              :columns="projectStore.columns"
+              :tasks="projectStore.tasks"
+              :current-user-id="currentUserId"
+              :project-id="selectedProjectId"
+              @task-click="onTaskClick"
+              @task-moved="onTaskMoved"
+              @tasks-updated="onTasksUpdated"
+            />
+          </template>
+        </div>
+        <aside class="sidebar">
+          <TeamMembers ref="teamMembersRef" :current-user-id="currentUserId" :project-id="selectedProjectId" />
+        </aside>
       </div>
-      <aside class="sidebar">
-        <TeamMembers ref="teamMembersRef" :current-user-id="currentUserId" :project-id="selectedProjectId" />
-      </aside>
-    </div>
+    </main>
 
-    <!-- 任务详情对话框 -->
+    <!-- Task Detail Dialog -->
     <TaskDetail
       v-model:visible="taskDetailVisible"
       :task="selectedTask"
@@ -54,21 +78,20 @@ import { ElMessage } from 'element-plus'
 import { useAuthStore } from '../stores/auth'
 import { useProjectStore } from '../stores/project'
 import { useSSEStoreUpdater } from '../composables/useSSEStoreUpdater'
-import { usePermission } from '../composables/usePermission'
 import { getProjects } from '../api/project'
 import { updateTaskStatus, type UpdateTaskStatusRequest } from '../api/task'
 import type { Project, Task } from '../api/project'
 import KanbanBoard from '../components/kanban/KanbanBoard.vue'
 import TeamMembers from '../components/TeamMembers.vue'
 import TaskDetail from '../components/task/TaskDetail.vue'
+import AppHeader from '../components/AppHeader.vue'
 
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
 const projectStore = useProjectStore()
-const permission = usePermission()
 
-// 初始化 SSE 连接
+// Initialize SSE connection
 useSSEStoreUpdater()
 
 const projects = ref<Project[]>([])
@@ -76,19 +99,10 @@ const selectedProjectId = ref<number>(0)
 const taskDetailVisible = ref(false)
 const selectedTask = ref<Task | null>(null)
 const teamMembersRef = ref<InstanceType<typeof TeamMembers> | null>(null)
-const canManageProject = ref(false)
 
 const currentUserId = computed(() => authStore.user?.id ?? null)
 
-async function checkManagePermission() {
-  if (!selectedProjectId.value) {
-    canManageProject.value = false
-    return
-  }
-  canManageProject.value = await permission.canManageProjectMembers(selectedProjectId.value)
-}
-
-// 从路由获取项目ID
+// Get project ID from route
 const projectIdFromRoute = computed(() => Number(route.params.id))
 
 onMounted(async () => {
@@ -96,9 +110,7 @@ onMounted(async () => {
     selectedProjectId.value = projectIdFromRoute.value
     await projectStore.loadProject(selectedProjectId.value)
     teamMembersRef.value?.loadMembers(selectedProjectId.value)
-    await checkManagePermission()
   } else {
-    // 如果没有项目ID，先获取项目列表
     try {
       const res = await getProjects()
       if (res.code === 0 && res.data.length > 0) {
@@ -110,47 +122,31 @@ onMounted(async () => {
   }
 })
 
-// 监听路由变化
+// Watch for route changes
 watch(() => route.params.id, async (newId) => {
   if (newId && Number(newId) !== selectedProjectId.value) {
     selectedProjectId.value = Number(newId)
     await projectStore.loadProject(selectedProjectId.value)
     teamMembersRef.value?.loadMembers(selectedProjectId.value)
-    await checkManagePermission()
   }
 })
 
 async function onProjectChange(projectId: number) {
   router.push(`/projects/${projectId}`)
   teamMembersRef.value?.loadMembers(projectId)
-  await checkManagePermission()
 }
 
-function goToSettings() {
-  router.push(`/projects/${selectedProjectId.value}/settings`)
-}
-
-function goToProfile() {
-  router.push('/profile')
-}
-
-function goToAdmin() {
-  router.push('/admin')
-}
-
-// 任务移动处理
+// Task movement handler
 async function onTaskMoved(taskId: number, newStatus: string, newPosition: number) {
-  // 乐观更新：立即更新本地状态
   const task = projectStore.tasks.find(t => t.id === taskId)
   if (!task) return
 
   const oldStatus = task.status
   const oldPosition = task.position
 
-  // 立即更新 UI
+  // Optimistic update
   projectStore.updateTask(taskId, { status: newStatus, position: newPosition })
 
-  // 调用 API
   try {
     const data: UpdateTaskStatusRequest = {
       status: newStatus,
@@ -158,18 +154,18 @@ async function onTaskMoved(taskId: number, newStatus: string, newPosition: numbe
     }
     const res = await updateTaskStatus(taskId, data)
     if (res.code !== 0) {
-      // API 失败，回滚
+      // Rollback on failure
       projectStore.updateTask(taskId, { status: oldStatus, position: oldPosition })
       ElMessage.error(res.message || '移动任务失败')
     }
   } catch (e: any) {
-    // 网络错误，回滚
+    // Rollback on error
     projectStore.updateTask(taskId, { status: oldStatus, position: oldPosition })
     ElMessage.error(e.message || '移动任务失败')
   }
 }
 
-// 任务列表更新（拖拽后重新排序）
+// Task list update handler (after drag reorder)
 function onTasksUpdated(updatedTasks: Task[]) {
   projectStore.setTasks(updatedTasks)
 }
@@ -178,44 +174,26 @@ function onTaskClick(task: Task) {
   selectedTask.value = task
   taskDetailVisible.value = true
 }
-
-async function handleLogout() {
-  await authStore.logout()
-  router.push('/login')
-}
 </script>
 
 <style scoped>
 .project-kanban {
-  width: 100%;
   min-height: 100vh;
-  background: #f5f7fa;
-  padding: 20px;
-}
-
-.header {
+  background: var(--color-bg-base);
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  padding: 0 10px;
+  flex-direction: column;
 }
 
-.header h1 {
-  font-size: 24px;
-  color: #333;
-}
-
-.header-actions {
-  display: flex;
-  gap: 12px;
-  align-items: center;
+.kanban-main {
+  flex: 1;
+  padding: var(--space-6);
 }
 
 .content-wrapper {
   display: flex;
-  gap: 20px;
+  gap: var(--space-6);
   align-items: flex-start;
+  height: 100%;
 }
 
 .main-content {
@@ -224,18 +202,84 @@ async function handleLogout() {
 }
 
 .sidebar {
-  flex: 0 0 260px;
+  flex: 0 0 280px;
 }
 
-.loading,
-.error {
-  text-align: center;
-  padding: 40px;
-  color: #666;
-  font-size: 16px;
+/* Loading/Error States */
+.loading-state,
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-16);
+  gap: var(--space-4);
+  color: var(--color-text-muted);
 }
 
-.error {
-  color: #e6a23c;
+.error-state {
+  color: var(--color-danger);
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--color-border);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.error-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  background: rgba(239, 71, 111, 0.1);
+  border-radius: 50%;
+}
+
+/* Project Selector */
+.project-selector {
+  min-width: 200px;
+}
+
+.project-select {
+  width: 200px;
+}
+
+.project-select :deep(.el-input__wrapper) {
+  border-radius: var(--radius-lg);
+  box-shadow: 0 0 0 1px var(--color-border);
+}
+
+.project-select :deep(.el-input__wrapper:hover) {
+  box-shadow: 0 0 0 1px var(--color-border-hover);
+}
+
+.project-select :deep(.el-input.is-focus .el-input__wrapper) {
+  box-shadow: 0 0 0 2px var(--color-primary-light) !important;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .sidebar {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .kanban-main {
+    padding: var(--space-4);
+  }
+
+  .project-selector {
+    display: none;
+  }
 }
 </style>

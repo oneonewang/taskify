@@ -1,43 +1,70 @@
 <template>
-  <div class="users-page">
-    <div class="page-header">
-      <h1>用户管理</h1>
-      <button @click="showImportDialog = true" class="btn btn-primary">批量导入</button>
+  <div class="admin-page">
+    <div class="page-header animate-in">
+      <div class="header-content">
+        <div class="page-title-section">
+          <h1>用户管理</h1>
+          <p>管理系统用户和权限</p>
+        </div>
+        <div class="header-actions">
+          <button @click="showImportDialog = true" class="btn btn-primary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            批量导入
+          </button>
+        </div>
+      </div>
+
+      <!-- Filter Bar -->
+      <div class="filter-bar">
+        <div class="filter-item">
+          <input
+            v-model="filters.email"
+            type="text"
+            placeholder="搜索邮箱..."
+            class="filter-input"
+            @keyup.enter="searchUsers"
+          />
+        </div>
+        <div class="filter-item">
+          <input
+            v-model="filters.display_name"
+            type="text"
+            placeholder="搜索名称..."
+            class="filter-input"
+            @keyup.enter="searchUsers"
+          />
+        </div>
+        <div class="filter-item">
+          <select v-model="filters.is_disabled" class="filter-select">
+            <option value="">全部状态</option>
+            <option value="false">已启用</option>
+            <option value="true">已禁用</option>
+          </select>
+        </div>
+        <button @click="searchUsers" class="btn btn-primary btn-sm">搜索</button>
+        <button @click="resetFilters" class="btn btn-ghost btn-sm">重置</button>
+      </div>
     </div>
 
-    <!-- 搜索筛选区域 -->
-    <div class="filter-bar">
-      <div class="filter-item">
-        <input
-          v-model="filters.email"
-          type="text"
-          placeholder="按邮箱搜索"
-          class="filter-input"
-        />
+    <div v-if="loading" class="loading-state animate-in">
+      <div class="loading-spinner"></div>
+    </div>
+    <div v-else-if="error" class="error-state animate-in">
+      <div class="error-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
       </div>
-      <div class="filter-item">
-        <input
-          v-model="filters.display_name"
-          type="text"
-          placeholder="按显示名称搜索"
-          class="filter-input"
-        />
-      </div>
-      <div class="filter-item">
-        <select v-model="filters.is_disabled" class="filter-select">
-          <option value="">全部状态</option>
-          <option value="false">已启用</option>
-          <option value="true">已禁用</option>
-        </select>
-      </div>
-      <button @click="searchUsers" class="btn btn-primary">搜索</button>
-      <button @click="resetFilters" class="btn btn-secondary">重置</button>
+      <span>{{ error }}</span>
     </div>
 
-    <div v-if="loading" class="loading">加载中...</div>
-    <div v-else-if="error" class="error">{{ error }}</div>
-
-    <div v-else class="users-table-container">
+    <div v-else class="users-table-container animate-in">
       <table class="users-table">
         <thead>
           <tr>
@@ -50,74 +77,92 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="user in users" :key="user.id">
-            <td>{{ user.id }}</td>
-            <td>{{ user.email }}</td>
-            <td>{{ user.display_name }}</td>
-            <td>
-              <span v-for="role in getUserSystemRoles(user.id)" :key="role" class="role-tag">
-                {{ role }}
-              </span>
-              <span v-if="getUserSystemRoles(user.id).length === 0" class="no-role">无</span>
+          <tr v-for="user in users" :key="user.id" class="user-row">
+            <td class="id-cell">{{ user.id }}</td>
+            <td class="email-cell">{{ user.email }}</td>
+            <td class="name-cell">{{ user.display_name || '-' }}</td>
+            <td class="roles-cell">
+              <div class="role-tags">
+                <span v-for="role in getUserSystemRoles(user.id)" :key="role" class="role-tag">
+                  {{ role }}
+                </span>
+                <span v-if="getUserSystemRoles(user.id).length === 0" class="no-role">无</span>
+              </div>
             </td>
-            <td>
-              <span :class="['status-tag', user.is_disabled ? 'status-disabled' : 'status-active']">
+            <td class="status-cell">
+              <span :class="['status-badge', user.is_disabled ? 'disabled' : 'active']">
                 {{ user.is_disabled ? '已禁用' : '正常' }}
               </span>
             </td>
-            <td class="action-cell">
-              <button @click="openRoleDialog(user)" class="btn btn-sm">分配角色</button>
-              <button @click="handleResetPassword(user)" class="btn btn-sm btn-warning">重置密码</button>
-              <button v-if="!user.is_disabled" @click="handleDisableUser(user)" class="btn btn-sm btn-danger">禁用</button>
-              <button v-else @click="handleEnableUser(user)" class="btn btn-sm btn-success">启用</button>
+            <td class="actions-cell">
+              <button @click="openRoleDialog(user)" class="btn btn-ghost btn-sm">分配角色</button>
+              <button @click="handleResetPassword(user)" class="btn btn-warning btn-sm">重置密码</button>
+              <button v-if="!user.is_disabled" @click="handleDisableUser(user)" class="btn btn-danger btn-sm">禁用</button>
+              <button v-else @click="handleEnableUser(user)" class="btn btn-success btn-sm">启用</button>
             </td>
           </tr>
         </tbody>
       </table>
 
-      <!-- 分页控件 -->
+      <!-- Pagination -->
       <div class="pagination" v-if="totalPages > 0">
-        <button
-          @click="goToPage(currentPage - 1)"
-          :disabled="currentPage <= 1"
-          class="btn btn-sm"
-        >
-          上一页
-        </button>
-        <span class="page-info">第 {{ currentPage }} / {{ totalPages }} 页，共 {{ totalUsers }} 条</span>
-        <button
-          @click="goToPage(currentPage + 1)"
-          :disabled="currentPage >= totalPages"
-          class="btn btn-sm"
-        >
-          下一页
-        </button>
+        <span class="page-info">共 {{ totalUsers }} 条</span>
+        <div class="pagination-controls">
+          <button @click="goToPage(currentPage - 1)" :disabled="currentPage <= 1" class="btn btn-ghost btn-sm">
+            上一页
+          </button>
+          <span class="page-number">{{ currentPage }} / {{ totalPages }}</span>
+          <button @click="goToPage(currentPage + 1)" :disabled="currentPage >= totalPages" class="btn btn-ghost btn-sm">
+            下一页
+          </button>
+        </div>
       </div>
     </div>
 
-    <!-- 分配角色对话框 -->
+    <!-- Role Dialog -->
     <div v-if="showRoleDialog" class="dialog-overlay" @click.self="closeRoleDialog">
-      <div class="dialog">
-        <h3>为 {{ selectedUser?.email }} 分配系统角色</h3>
-        <div class="role-list">
+      <div class="dialog animate-in">
+        <div class="dialog-header">
+          <h3>为 {{ selectedUser?.email }} 分配系统角色</h3>
+          <button @click="closeRoleDialog" class="dialog-close">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+        <div class="dialog-body">
           <label v-for="role in availableRoles" :key="role.id" class="role-option">
             <input type="radio" :value="role.id" v-model="selectedRoleId" />
-            <span>{{ role.display_name }}</span>
+            <div class="role-info">
+              <span class="role-name">{{ role.display_name || role.name }}</span>
+              <span class="role-desc">{{ role.description }}</span>
+            </div>
           </label>
         </div>
-        <div class="dialog-actions">
-          <button @click="closeRoleDialog" class="btn btn-secondary">取消</button>
+        <div class="dialog-footer">
+          <button @click="closeRoleDialog" class="btn btn-ghost">取消</button>
           <button @click="assignRole" class="btn btn-primary" :disabled="!selectedRoleId">确认</button>
         </div>
       </div>
     </div>
 
-    <!-- 操作结果提示 -->
-    <div v-if="showToast" :class="['toast', toastType]">
-      {{ toastMessage }}
-    </div>
+    <!-- Toast Notification -->
+    <Transition name="toast">
+      <div v-if="showToast" :class="['toast', toastType]">
+        <svg v-if="toastType === 'success'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        {{ toastMessage }}
+      </div>
+    </Transition>
 
-    <!-- 批量导入对话框 -->
+    <!-- Import Dialog -->
     <ImportUsersDialog
       :visible="showImportDialog"
       @close="showImportDialog = false"
@@ -151,27 +196,23 @@ const error = ref<string | null>(null)
 const showRoleDialog = ref(false)
 const selectedUser = ref<User | null>(null)
 const selectedRoleId = ref<number | null>(null)
-
 const availableRoles = ref<Role[]>([])
 const showImportDialog = ref(false)
 
-// 分页相关
 const currentPage = ref(1)
 const pageSize = ref(20)
 const totalUsers = ref(0)
 const totalPages = ref(0)
 
-// 搜索筛选
 const filters = ref({
   email: '',
   display_name: '',
   is_disabled: ''
 })
 
-// 提示消息
 const showToast = ref(false)
 const toastMessage = ref('')
-const toastType = ref('success')
+const toastType = ref<'success' | 'error'>('success')
 
 onMounted(async () => {
   await loadData()
@@ -205,7 +246,6 @@ async function loadData() {
       availableRoles.value = roles.value
     }
 
-    // 加载每个用户的角色
     for (const user of users.value) {
       const res = await getUserRolesApi(user.id) as any
       if (res.code === 0) {
@@ -225,11 +265,7 @@ function searchUsers() {
 }
 
 function resetFilters() {
-  filters.value = {
-    email: '',
-    display_name: '',
-    is_disabled: ''
-  }
+  filters.value = { email: '', display_name: '', is_disabled: '' }
   searchUsers()
 }
 
@@ -257,7 +293,6 @@ function closeRoleDialog() {
 
 async function assignRole() {
   if (!selectedUser.value || !selectedRoleId.value) return
-
   try {
     const res = await assignSystemRoleApi(selectedUser.value.id, selectedRoleId.value) as ApiResponse<null>
     if (res.code === 0) {
@@ -274,7 +309,6 @@ async function assignRole() {
 
 async function handleResetPassword(user: User) {
   if (!confirm(`确定要重置用户 ${user.email} 的密码吗？`)) return
-
   try {
     const res = await resetUserPassword(user.id) as ApiResponse<null>
     if (res.code === 0) {
@@ -289,7 +323,6 @@ async function handleResetPassword(user: User) {
 
 async function handleDisableUser(user: User) {
   if (!confirm(`确定要禁用用户 ${user.email} 吗？`)) return
-
   try {
     const res = await disableUser(user.id) as ApiResponse<null>
     if (res.code === 0) {
@@ -305,7 +338,6 @@ async function handleDisableUser(user: User) {
 
 async function handleEnableUser(user: User) {
   if (!confirm(`确定要启用用户 ${user.email} 吗？`)) return
-
   try {
     const res = await enableUser(user.id) as ApiResponse<null>
     if (res.code === 0) {
@@ -323,32 +355,52 @@ function showNotification(message: string, type: 'success' | 'error') {
   toastMessage.value = message
   toastType.value = type
   showToast.value = true
-  setTimeout(() => {
-    showToast.value = false
-  }, 3000)
+  setTimeout(() => { showToast.value = false }, 3000)
 }
 </script>
 
 <style scoped>
-.users-page {
+.admin-page {
+  padding: var(--space-6);
   max-width: 1400px;
+  margin: 0 auto;
 }
 
+/* Page Header */
 .page-header {
-  margin-bottom: 24px;
+  margin-bottom: var(--space-6);
 }
 
-.page-header h1 {
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--space-5);
+}
+
+.page-title-section h1 {
+  font-family: var(--font-display);
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--space-1);
+}
+
+.page-title-section p {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
   margin: 0;
-  font-size: 24px;
-  color: #333;
 }
 
+/* Filter Bar */
 .filter-bar {
   display: flex;
-  gap: 12px;
-  margin-bottom: 16px;
+  gap: var(--space-3);
   flex-wrap: wrap;
+  background: var(--color-bg-surface);
+  padding: var(--space-4);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-border);
 }
 
 .filter-item {
@@ -357,33 +409,119 @@ function showNotification(message: string, type: 'success' | 'error') {
 
 .filter-input,
 .filter-select {
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
   min-width: 150px;
+  transition: all var(--transition-base);
 }
 
 .filter-input:focus,
 .filter-select:focus {
   outline: none;
-  border-color: #1976d2;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(91, 95, 199, 0.1);
 }
 
-.loading,
-.error {
-  padding: 40px;
-  text-align: center;
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  transition: all var(--transition-base);
 }
 
-.error {
-  color: #dc3545;
+.btn-sm {
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--font-size-xs);
 }
 
+.btn-primary {
+  background: var(--color-primary);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: var(--color-primary-hover);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+}
+
+.btn-ghost:hover {
+  background: var(--color-bg-muted);
+  color: var(--color-text-primary);
+}
+
+.btn-warning {
+  background: #f5a623;
+  color: white;
+}
+
+.btn-danger {
+  background: var(--color-danger);
+  color: white;
+}
+
+.btn-success {
+  background: var(--color-success);
+  color: white;
+}
+
+/* Loading/Error */
+.loading-state,
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-16);
+  gap: var(--space-4);
+}
+
+.error-state {
+  color: var(--color-danger);
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--color-border);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.error-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  background: rgba(239, 71, 111, 0.1);
+  border-radius: 50%;
+}
+
+/* Users Table */
 .users-table-container {
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  background: var(--color-bg-surface);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-border);
   overflow: hidden;
 }
 
@@ -394,190 +532,243 @@ function showNotification(message: string, type: 'success' | 'error') {
 
 .users-table th,
 .users-table td {
-  padding: 12px 16px;
+  padding: var(--space-4);
   text-align: left;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .users-table th {
-  background: #f8f9fa;
-  font-weight: 600;
-  color: #333;
+  background: var(--color-bg-muted);
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
 }
 
-.users-table tbody tr:hover {
-  background: #f5f5f5;
+.user-row:hover {
+  background: var(--color-bg-muted);
+}
+
+.id-cell {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  width: 60px;
+}
+
+.email-cell {
+  font-weight: var(--font-weight-medium);
+}
+
+.name-cell {
+  color: var(--color-text-secondary);
+}
+
+.role-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
 }
 
 .role-tag {
   display: inline-block;
-  padding: 2px 8px;
-  margin-right: 4px;
-  background: #e3f2fd;
-  color: #1976d2;
-  border-radius: 4px;
-  font-size: 12px;
+  padding: 2px var(--space-2);
+  background: rgba(91, 95, 199, 0.1);
+  color: var(--color-primary);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
 }
 
 .no-role {
-  color: #999;
-  font-size: 12px;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
 }
 
-.status-tag {
+.status-badge {
   display: inline-block;
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 12px;
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
 }
 
-.status-active {
-  background: #e8f5e9;
-  color: #2e7d32;
+.status-badge.active {
+  background: rgba(78, 205, 196, 0.15);
+  color: #2e8b7d;
 }
 
-.status-disabled {
-  background: #ffebee;
-  color: #c62828;
+.status-badge.disabled {
+  background: rgba(239, 71, 111, 0.1);
+  color: var(--color-danger);
 }
 
-.action-cell {
+.actions-cell {
   white-space: nowrap;
 }
 
-.btn {
-  padding: 6px 12px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-4);
+  border-top: 1px solid var(--color-border);
 }
 
-.btn-sm {
-  padding: 4px 8px;
-  font-size: 12px;
-  margin-right: 4px;
+.page-info {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
 }
 
-.btn-primary {
-  background: #1976d2;
-  color: #fff;
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
 }
 
-.btn-secondary {
-  background: #6c757d;
-  color: #fff;
+.page-number {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
 }
 
-.btn-warning {
-  background: #ff9800;
-  color: #fff;
-}
-
-.btn-danger {
-  background: #dc3545;
-  color: #fff;
-}
-
-.btn-success {
-  background: #28a745;
-  color: #fff;
-}
-
+/* Dialog */
 .dialog-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: var(--z-modal);
+  backdrop-filter: blur(4px);
 }
 
 .dialog {
-  background: #fff;
-  border-radius: 8px;
-  padding: 24px;
-  min-width: 320px;
-  max-width: 400px;
+  background: var(--color-bg-surface);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  min-width: 400px;
+  max-width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-xl);
 }
 
-.dialog h3 {
-  margin: 0 0 16px;
-  font-size: 18px;
+.dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-5);
 }
 
-.role-list {
-  margin: 16px 0;
+.dialog-header h3 {
+  font-family: var(--font-display);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.dialog-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: none;
+  border: none;
+  border-radius: var(--radius-md);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.dialog-close:hover {
+  background: var(--color-bg-muted);
+  color: var(--color-text-primary);
+}
+
+.dialog-body {
+  margin-bottom: var(--space-5);
 }
 
 .role-option {
   display: flex;
-  align-items: center;
-  padding: 8px;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
   cursor: pointer;
+  transition: all var(--transition-base);
 }
 
 .role-option:hover {
-  background: #f5f5f5;
+  background: var(--color-bg-muted);
 }
 
 .role-option input {
-  margin-right: 8px;
+  margin-top: var(--space-1);
 }
 
-.dialog-actions {
+.role-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.role-name {
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+}
+
+.role-desc {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.dialog-footer {
   display: flex;
   justify-content: flex-end;
-  gap: 8px;
-  margin-top: 16px;
+  gap: var(--space-3);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
 }
 
-.pagination {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  padding: 16px;
-  border-top: 1px solid #eee;
-}
-
-.page-info {
-  color: #666;
-  font-size: 14px;
-}
-
+/* Toast */
 .toast {
   position: fixed;
-  bottom: 20px;
-  right: 20px;
-  padding: 12px 24px;
-  border-radius: 4px;
-  color: #fff;
-  font-size: 14px;
-  z-index: 2000;
-  animation: fadeIn 0.3s ease;
+  bottom: var(--space-6);
+  right: var(--space-6);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-5);
+  border-radius: var(--radius-lg);
+  color: white;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  z-index: var(--z-toast);
+  box-shadow: var(--shadow-lg);
 }
 
 .toast.success {
-  background: #28a745;
+  background: var(--color-success);
 }
 
 .toast.error {
-  background: #dc3545;
+  background: var(--color-danger);
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.toast-enter-active,
+.toast-leave-active {
+  transition: all var(--transition-base);
+}
+
+.toast-enter-from,
+.toast-leave-to {
+  opacity: 0;
+  transform: translateY(20px);
 }
 </style>

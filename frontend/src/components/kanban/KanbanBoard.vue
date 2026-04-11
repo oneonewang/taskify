@@ -1,13 +1,15 @@
 <template>
   <div class="kanban-board">
     <KanbanColumn
-      v-for="column in columns"
+      v-for="(column, index) in columns"
       :key="column.status"
       :name="column.name"
       :status="column.status"
       :tasks="getTasksByStatus(column.status)"
       :current-user-id="currentUserId"
       :project-id="projectId"
+      :style="{ animationDelay: `${index * 0.1}s` }"
+      class="column-animate-in"
       @task-click="(task) => emit('taskClick', task)"
       @task-moved="(taskId, newStatus, newPosition) => emit('taskMoved', taskId, newStatus, newPosition)"
       @tasks-updated="(tasks) => onTasksUpdated(column.status, tasks)"
@@ -36,14 +38,13 @@ function getTasksByStatus(status: string): Task[] {
   return props.tasks.filter(t => t.status === status)
 }
 
-// 当某一列的任务列表更新时
+// When a column's task list is updated
 function onTasksUpdated(status: string, updatedTasks: Task[]) {
-  // 合并更新后的任务到总任务列表
-  // 注意：任务可能同时出现在 otherTasks 和 updatedTasks 中（如果状态还未更新）
-  // 需要去重，以 updatedTasks 中的任务状态为准
+  // Merge updated tasks into the main task list
+  // Tasks may appear in both otherTasks and updatedTasks if status hasn't been updated yet
+  // Deduplicate by ID, with updatedTasks taking precedence
   const otherTasks = props.tasks.filter(t => t.status !== status)
   const merged = [...otherTasks, ...updatedTasks]
-  // 按 ID 去重，后出现的优先（updatedTasks 中的任务状态更新）
   const seen = new Set<number>()
   const deduplicated = merged.filter(task => {
     if (seen.has(task.id)) return false
@@ -57,8 +58,51 @@ function onTasksUpdated(status: string, updatedTasks: Task[]) {
 <style scoped>
 .kanban-board {
   display: flex;
-  gap: 16px;
+  gap: var(--space-5);
   overflow-x: auto;
-  padding-bottom: 20px;
+  padding: var(--space-2) var(--space-1);
+  padding-bottom: var(--space-6);
+  min-height: 400px;
+}
+
+/* Column staggered animation */
+.column-animate-in {
+  animation: columnEnter 0.5s ease forwards;
+  opacity: 0;
+}
+
+@keyframes columnEnter {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Custom scrollbar for board */
+.kanban-board::-webkit-scrollbar {
+  height: 10px;
+}
+
+.kanban-board::-webkit-scrollbar-track {
+  background: var(--color-bg-muted);
+  border-radius: var(--radius-full);
+}
+
+.kanban-board::-webkit-scrollbar-thumb {
+  background: var(--color-border-hover);
+  border-radius: var(--radius-full);
+}
+
+.kanban-board::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-muted);
+}
+
+/* Smooth scrolling when dragging */
+.kanban-board {
+  scroll-behavior: smooth;
 }
 </style>
