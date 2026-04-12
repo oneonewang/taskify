@@ -181,9 +181,9 @@ func registerRoutes(r *gin.Engine, projectHandler *handlers.ProjectHandler, task
 	// OAuth Token 端点（公开）
 	api.GET("/oauth/token/info", tokenHandler.GetTokenInfo)
 
-	// OAuth Token 管理端点（需要认证）
+	// OAuth Token 管理端点（需要会话认证 - 用于前端Web UI）
 	oauth := api.Group("/oauth")
-	oauth.Use(middleware.PATAuthMiddleware())
+	oauth.Use(middleware.AuthRequired())
 	{
 		oauth.POST("/tokens", tokenHandler.CreateToken)
 		oauth.GET("/tokens", tokenHandler.ListTokens)
