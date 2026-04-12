@@ -178,11 +178,11 @@ func registerRoutes(r *gin.Engine, projectHandler *handlers.ProjectHandler, task
 	r.GET("/.well-known/oauth-authorization-server", discoveryHandler.GetOAuthAuthorizationServer)
 	r.GET("/.well-known/openid-configuration", discoveryHandler.GetOpenIDConfiguration)
 
-	// OAuth Token 端点
-	r.GET("/oauth/token/info", tokenHandler.GetTokenInfo)
+	// OAuth Token 端点（公开）
+	api.GET("/oauth/token/info", tokenHandler.GetTokenInfo)
 
 	// OAuth Token 管理端点（需要认证）
-	oauth := r.Group("/oauth")
+	oauth := api.Group("/oauth")
 	oauth.Use(middleware.PATAuthMiddleware())
 	{
 		oauth.POST("/tokens", tokenHandler.CreateToken)
