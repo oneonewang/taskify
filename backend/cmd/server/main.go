@@ -7,6 +7,8 @@ import (
 	"github.com/taskify/backend/config"
 	"github.com/taskify/backend/internal/handlers"
 	"github.com/taskify/backend/internal/middleware"
+	"github.com/taskify/backend/internal/mcp"
+	"github.com/taskify/backend/internal/mcp/tools"
 	"github.com/taskify/backend/internal/repository"
 )
 
@@ -33,11 +35,23 @@ func main() {
 	// 注册中间件
 	r.Use(middleware.CORS())
 
+	// 创建MCP服务器
+	mcpServer := mcp.NewServer("taskify", "1.0.0")
+	tools.RegisterTasksTools(mcpServer)
+	tools.RegisterProjectsTools(mcpServer)
+	tools.RegisterCommentsTools(mcpServer)
+
+	// 创建MCP处理器
+	mcpHandler := handlers.NewMCPHandler(mcpServer.GetServer())
+
+	// 创建Token处理器
+	tokenHandler := handlers.NewTokenHandler()
+
 	// 注册路由
 	projectHandler := handlers.NewProjectHandler()
 	taskHandler := handlers.NewTaskHandler()
 	commentHandler := handlers.NewCommentHandler()
-	registerRoutes(r, projectHandler, taskHandler, commentHandler)
+	registerRoutes(r, projectHandler, taskHandler, commentHandler, mcpHandler, tokenHandler, "http://localhost:"+cfg.Port)
 
 	// 启动服务器
 	log.Printf("服务器启动在端口 %s", cfg.Port)
@@ -47,7 +61,7 @@ func main() {
 }
 
 // registerRoutes 注册所有路由
-func registerRoutes(r *gin.Engine, projectHandler *handlers.ProjectHandler, taskHandler *handlers.TaskHandler, commentHandler *handlers.CommentHandler) {
+func registerRoutes(r *gin.Engine, projectHandler *handlers.ProjectHandler, taskHandler *handlers.TaskHandler, commentHandler *handlers.CommentHandler, mcpHandler *handlers.MCPHandler, tokenHandler *handlers.TokenHandler, issuerURL string) {
 	api := r.Group("/api")
 	{
 		// 认证路由（无需登录）
@@ -158,4 +172,24 @@ func registerRoutes(r *gin.Engine, projectHandler *handlers.ProjectHandler, task
 		// SSE事件路由
 		api.GET("/events", handlers.GetEvents)
 	}
+
+	// OAuth Discovery 端点（无需认证）
+	discoveryHandler := handlers.NewDiscoveryHandler(issuerURL)
+	r.GET("/.well-known/oauth-authorization-server", discoveryHandler.GetOAuthAuthorizationServer)
+	r.GET("/.well-known/openid-configuration", discoveryHandler.GetOpenIDConfiguration)
+
+	// OAuth Token 端点
+	r.GET("/oauth/token/info", tokenHandler.GetTokenInfo)
+
+	// OAuth Token 管理端点（需要认证）
+	oauth := r.Group("/oauth")
+	oauth.Use(middleware.PATAuthMiddleware())
+	{
+		oauth.POST("/tokens", tokenHandler.CreateToken)
+		oauth.GET("/tokens", tokenHandler.ListTokens)
+		oauth.DELETE("/tokens/:id", tokenHandler.RevokeToken)
+	}
+
+	// MCP 端点（需要认证）
+	r.POST("/mcp", middleware.PATAuthMiddleware(), mcpHandler.HandleMCP)
 }

@@ -6,6 +6,7 @@ import ProjectSettings from '../views/projects/ProjectSettings.vue'
 import Login from '../views/Login.vue'
 import Register from '../views/Register.vue'
 import Profile from '../views/Profile.vue'
+import TokenSettings from '../views/TokenSettings.vue'
 import AdminLayout from '../views/admin/Layout.vue'
 import AdminUsers from '../views/admin/Users.vue'
 import AdminRoles from '../views/admin/Roles.vue'
@@ -37,6 +38,12 @@ const router = createRouter({
       path: '/profile',
       name: 'Profile',
       component: Profile,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/profile/tokens',
+      name: 'TokenSettings',
+      component: TokenSettings,
       meta: { requiresAuth: true }
     },
     {

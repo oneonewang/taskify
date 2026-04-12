@@ -50,6 +50,7 @@ func AutoMigrate() error {
 		&models.Project{},
 		&models.Task{},
 		&models.Comment{},
+		&models.PersonalAccessToken{},
 	)
 }
 

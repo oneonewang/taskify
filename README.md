@@ -84,6 +84,102 @@ taskify/
 - [x] 编辑我的评论 (US8)
 - [x] 删除我的评论 (US9)
 - [x] 实时更新 (SSE) - T068-T071
+- [x] MCP 服务与 PAT 认证 (US1/US2/US3)
+
+## MCP 服务与 PAT 认证
+
+Taskify 支持 MCP (Model Context Protocol) 协议，允许 MCP 客户端通过个人访问令牌 (PAT) 进行认证。
+
+### OAuth Discovery 端点
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | /.well-known/oauth-authorization-server | OAuth Authorization Server Metadata |
+| GET | /.well-known/openid-configuration | OpenID Connect Discovery |
+
+### OAuth 令牌端点
+
+| 方法 | 路径 | 说明 | 认证 |
+|------|------|------|------|
+| GET | /oauth/token/info | 验证 PAT 并获取元数据 | Bearer PAT |
+| POST | /oauth/tokens | 创建新令牌 | Bearer PAT |
+| GET | /oauth/tokens | 列出用户令牌 | Bearer PAT |
+| DELETE | /oauth/tokens/:id | 撤销令牌 | Bearer PAT |
+
+### MCP 端点
+
+| 方法 | 路径 | 说明 | 认证 |
+|------|------|------|------|
+| POST | /mcp | MCP JSON-RPC 请求 | Bearer PAT |
+
+### MCP 工具
+
+#### 任务工具
+
+| 工具 | 说明 |
+|------|------|
+| tasks.list | 列出任务 |
+| tasks.get | 获取任务详情 |
+| tasks.create | 创建任务 |
+| tasks.update | 更新任务 |
+| tasks.delete | 删除任务 |
+| tasks.update_status | 更新任务状态 |
+
+#### 项目工具
+
+| 工具 | 说明 |
+|------|------|
+| projects.list | 列出项目 |
+| projects.get | 获取项目详情 |
+| projects.create | 创建项目 |
+| projects.update | 更新项目 |
+| projects.delete | 删除项目 |
+
+#### 评论工具
+
+| 工具 | 说明 |
+|------|------|
+| comments.list | 列出评论 |
+| comments.get | 获取评论详情 |
+| comments.create | 创建评论 |
+| comments.update | 更新评论 |
+| comments.delete | 删除评论 |
+
+### 令牌作用域
+
+令牌使用 `resource:action` 格式的作用域，用逗号分隔：
+
+| 资源 | 读操作 | 写操作 |
+|------|--------|--------|
+| task | task:read | task:write |
+| project | project:read | project:write |
+| comment | comment:read | comment:write |
+
+示例：`task:read,task:write,project:read`
+
+### MCP 客户端使用示例
+
+```bash
+# 1. 创建令牌
+curl -X POST http://localhost:8080/oauth/tokens \
+  -H "Authorization: Bearer YOUR_PAT" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "MCP Client", "scope": "task:read,task:write", "expires_in_days": 90}'
+
+# 2. 验证令牌
+curl http://localhost:8080/oauth/token/info \
+  -H "Authorization: Bearer YOUR_PAT"
+
+# 3. 调用 MCP 工具
+curl -X POST http://localhost:8080/mcp \
+  -H "Authorization: Bearer YOUR_PAT" \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"name": "tasks.list", "arguments": {}}}'
+```
+
+### 前端令牌管理
+
+访问 `/profile/tokens` 管理您的个人访问令牌。
 
 ## 用户管理与 RBAC
 
