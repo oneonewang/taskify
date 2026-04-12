@@ -8,6 +8,7 @@ import (
 	"github.com/taskify/backend/internal/middleware"
 	"github.com/taskify/backend/internal/models"
 	"github.com/taskify/backend/internal/services"
+	"github.com/taskify/backend/pkg/response"
 )
 
 // TokenHandler 令牌处理
@@ -91,7 +92,7 @@ func (h *TokenHandler) CreateToken(c *gin.Context) {
 	}
 
 	// 返回带明文令牌的响应
-	c.JSON(http.StatusCreated, gin.H{
+	response.Created(c, "Token created successfully", gin.H{
 		"id":           resp.ID,
 		"token":        rawToken,
 		"name":         resp.Name,
@@ -122,7 +123,7 @@ func (h *TokenHandler) ListTokens(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, resp)
+	response.Success(c, resp)
 }
 
 // RevokeToken DELETE /oauth/tokens/:id - 撤销令牌
@@ -149,24 +150,16 @@ func (h *TokenHandler) RevokeToken(c *gin.Context) {
 	err = h.tokenService.RevokeToken(uint(tokenID), userID)
 	if err != nil {
 		if err.Error() == "token not found" {
-			c.JSON(http.StatusNotFound, gin.H{
-				"error": "token_not_found",
-			})
+			response.NotFound(c, "Token not found")
 			return
 		}
 		if err.Error() == "unauthorized" {
-			c.JSON(http.StatusForbidden, gin.H{
-				"error":   "forbidden",
-				"message": "Cannot revoke token owned by another user",
-			})
+			response.Forbidden(c, "Cannot revoke token owned by another user")
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error":   "internal_error",
-			"message": "Failed to revoke token: " + err.Error(),
-		})
+		response.InternalError(c, "Failed to revoke token: "+err.Error())
 		return
 	}
 
-	c.Status(http.StatusNoContent)
+	response.OK(c, "Token revoked successfully")
 }
