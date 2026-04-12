@@ -177,6 +177,155 @@ curl -X POST http://localhost:8080/mcp \
   -d '{"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"name": "tasks.list", "arguments": {}}}'
 ```
 
+### 在 Claude Code 中配置 MCP 服务
+
+#### 1. 创建 MCP 配置文件
+
+在项目根目录创建 `.claude/mcp.json`：
+
+```json
+{
+  "mcpServers": {
+    "taskify": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-http", "http://localhost:8080/mcp", "--header", "Authorization:Bearer YOUR_PAT_HERE"]
+    }
+  }
+}
+```
+
+#### 2. 获取个人访问令牌
+
+通过前端界面创建令牌：
+
+1. 登录 Taskify
+2. 访问 `/profile/tokens`
+3. 点击"创建令牌"按钮
+4. 填写令牌名称和作用域（推荐 `task:read,task:write`）
+5. 复制生成的令牌
+
+#### 3. 重启 Claude Code
+
+添加 MCP 配置后，需要重启 Claude Code 使配置生效。
+
+#### 4. 验证 MCP 连接
+
+在 Claude Code 中输入：
+
+```
+/mcp list
+```
+
+应该看到 `taskify` 服务器及其提供的工具。
+
+### 测试 MCP 调用
+
+#### 使用 MCP 工具
+
+在 Claude Code 对话中，可以直接调用 MCP 工具：
+
+```
+使用 tasks.list 列出所有任务
+```
+
+```
+使用 projects.list 列出所有项目
+```
+
+```
+使用 tasks.create 创建一个新任务，名称为"测试任务"，项目ID为1
+```
+
+#### 使用 curl 测试
+
+```bash
+# MCP JSON-RPC 2.0 格式请求
+
+# 列出所有任务
+curl -X POST http://localhost:8080/mcp \
+  -H "Authorization: Bearer YOUR_PAT" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "tools/call",
+    "params": {
+      "name": "tasks.list",
+      "arguments": {}
+    }
+  }'
+
+# 获取项目列表
+curl -X POST http://localhost:8080/mcp \
+  -H "Authorization: Bearer YOUR_PAT" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 2,
+    "method": "tools/call",
+    "params": {
+      "name": "projects.list",
+      "arguments": {}
+    }
+  }'
+
+# 获取单个任务
+curl -X POST http://localhost:8080/mcp \
+  -H "Authorization: Bearer YOUR_PAT" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 3,
+    "method": "tools/call",
+    "params": {
+      "name": "tasks.get",
+      "arguments": {"id": 1}
+    }
+  }'
+
+# 创建任务
+curl -X POST http://localhost:8080/mcp \
+  -H "Authorization: Bearer YOUR_PAT" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 4,
+    "method": "tools/call",
+    "params": {
+      "name": "tasks.create",
+      "arguments": {"project_id": 1, "title": "新任务", "description": "任务描述"}
+    }
+  }'
+
+# 更新任务状态
+curl -X POST http://localhost:8080/mcp \
+  -H "Authorization: Bearer YOUR_PAT" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 5,
+    "method": "tools/call",
+    "params": {
+      "name": "tasks.update_status",
+      "arguments": {"id": 1, "status": "done"}
+    }
+  }'
+```
+
+#### OAuth Discovery 端点测试
+
+```bash
+# 查看 OAuth Authorization Server Metadata
+curl http://localhost:8080/.well-known/oauth-authorization-server
+
+# 查看 OpenID Configuration
+curl http://localhost:8080/.well-known/openid-configuration
+
+# 验证令牌（Token Introspection）
+curl http://localhost:8080/oauth/token/info \
+  -H "Authorization: Bearer YOUR_PAT"
+```
+
 ### 前端令牌管理
 
 访问 `/profile/tokens` 管理您的个人访问令牌。
